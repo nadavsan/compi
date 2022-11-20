@@ -62,7 +62,10 @@ module Reader : READER = struct
     let nt1 = unitify nt1 in
     nt1 str
   and nt_paired_comment str = raise X_not_yet_implemented
-  and nt_sexpr_comment str = raise X_not_yet_implemented
+  and nt_sexpr_comment str = 
+    let nt1 = caten (word "#;") nt_sexpr in
+    let nt1 = pack nt1 (fun _ -> ()) in
+    nt1 str
   and nt_comment str =
     disj_list
       [nt_line_comment;
@@ -81,12 +84,31 @@ module Reader : READER = struct
     let nt1 = caten nt_skip_star (caten nt nt_skip_star) in
     let nt1 = pack nt1 (fun (_, (e, _)) -> e) in
     nt1
-  and nt_digit str =
-    let nt1 = range '0' '9'
-    nt1
+  and nt_digit str = 
+    let nt1 = range '0' '9' in
+    let nt1 = pack nt1 (let delta = int_of_char '0' in 
+                      fun digit -> int_of_char digit - delta) in
+    nt1 str
+  and nt_digit_a_f str = 
+    let nt1 = range 'a' 'f' in
+    let nt1 = pack nt1 (let delta = int_of_char 'a' - 10 in
+                        fun hex_digit -> int_of_char hex_digit - delta) in
+    let nt2 = range 'A' 'F' in
+    let nt2 = pack nt2 (let delta = int_of_char 'A' - 10 in
+                        fun hex_digit -> int_of_char hex_digit - delta) in
+    let nt1 = disj nt1 nt2 in
+    nt1 str
   and nt_hex_digit str = 
-    let nt1 = pack (range '0' '9') (make_char)
-  and nt_nat str = raise X_not_yet_implemented
+    let nt1 = disj nt_digit nt_digit_a_f in
+    nt1 str
+  and nt_nat str = 
+    let nt1 = plus nt_digit in
+    let nt1 = pack nt1 (fun digits ->
+                  List.fold_left
+                    (fun number digit -> 10 * number + digit)
+                    0
+                    digits) in
+    nt1 str
   and nt_hex_nat str = 
     let nt1 = plus nt_hex_digit in
     let nt1 = pack nt1
@@ -97,7 +119,15 @@ module Reader : READER = struct
                     0
                     digits) in
     nt1 str
-  and nt_optional_sign str = raise X_not_yet_implemented
+  and nt_optional_sign str = 
+    let nt1 = pack (char '+') (fun _ -> true) in
+    let nt2 = pack (char '-') (fun _ -> false) in
+    let nt1 = disj nt1 nt2 in
+    let nt1 = maybe nt1 in
+    let nt1 = pack nt1 (function
+                      | None -> true
+                      | Some sign -> sign) in
+    nt1 str
   and nt_int str =
     let nt1 = caten nt_optional_sign nt_nat in
     let nt1 = pack nt1
@@ -364,3 +394,4 @@ module Reader : READER = struct
     List.fold_right (fun car cdr -> ScmPair (car, cdr)) sexprs ScmNil;;
 
 end;; (* end of struct Reader *)
+
