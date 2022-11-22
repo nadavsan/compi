@@ -37,7 +37,7 @@ module type READER = sig
   val scheme_sexpr_list_of_sexpr_list : sexpr list -> sexpr
 end;; (* end of READER signature *)
 
-module Reader : READER = struct
+module Reader (*: READER*) = struct
   open PC;;
 
   type string_part =
@@ -180,12 +180,55 @@ module Reader : READER = struct
       (function
        | None -> none_value
        | Some(x) -> x)
-  and nt_float str = raise X_not_yet_implemented
+  (*and nt_float str = 
+      let nt1 = nt_optional_sign in
+      let nt2 = disj (disj nt_float_A nt_float_B) nt_float_C in
+      let nt1 = caten nt1 nt2 in
+      nt1 str*)
+    and nt_float_A str = 
+    let nt_dot = char '.' in
+    let nt_ip = pack (caten nt_integer_part nt_dot) (fun (i, _)-> i) in
+    let nt_ipm = pack (caten nt_ip (maybe nt_mantissa)) (fun (i,m) ->
+                                                        match m with
+                                                        |Some m -> i+.m
+                                                        |None ->i) in 
+    let nt1 = pack (caten nt_ipm (maybe nt_exponent)) (fun (ipm, e) ->
+                                                        match e with
+                                                        |Some e -> ipm*.e
+                                                        |None -> ipm) in
+    nt1 str
+  and nt_float_B str = 
+    let nt1 = char '.' in
+    let nt2 = nt_mantissa in
+    let nt3 = maybe nt_exponent in
+    let nt1 = caten (caten nt1 nt2) nt3 in
+    let nt1 = pack nt1 (fun((_,manti) ,expo) ->
+                                              manti *. (match expo with
+                                              | Some x -> x
+                                              | None -> 1.)) in
+    nt1 str
+  and nt_float_C str =
+     let nt1 = nt_integer_part in
+     let nt2 = nt_exponent in
+     let nt1 = caten nt1 nt2 in
+     let nt1 = pack nt1 (fun (inte,expo)-> 
+                      inte *. expo) in
+     nt1 str
+  and nt_float str = 
+    let nt1 = maybe nt_optional_sign in
+    let nt_float_type = disj (disj nt_float_A nt_float_B) nt_float_C in
+    let nt1 = pack (caten nt1 nt_float_type) (fun (sign, float_num) ->
+                                                            float_num *. 
+                                                            match sign with
+                                                            | false  -> -1
+                                                            | true -> 1
+                                                            | None -> 1) in
+    nt1 str
   and nt_number str =
     let nt1 = nt_float in
     let nt2 = nt_frac in
     let nt3 = pack nt_int (fun n -> ScmRational(n, 1)) in
-    let nt1 = disj nt1 (disj nt2 nt3) in
+    let nt1 = (disj nt1 (disj nt2 nt3)) in
     let nt1 = pack nt1 (fun r -> ScmNumber r) in
     let nt1 = not_followed_by nt1 nt_symbol_char in
     nt1 str  
@@ -394,4 +437,3 @@ module Reader : READER = struct
     List.fold_right (fun car cdr -> ScmPair (car, cdr)) sexprs ScmNil;;
 
 end;; (* end of struct Reader *)
-
