@@ -1,4 +1,4 @@
-#use "pc.ml";;
+#use "/home/gmayer/work/lang/ocaml/pc.ml";;
 
 exception X_not_yet_implemented;;
 exception X_this_should_not_happen of string;;
@@ -37,7 +37,7 @@ module type READER = sig
   val scheme_sexpr_list_of_sexpr_list : sexpr list -> sexpr
 end;; (* end of READER signature *)
 
-module Reader (*: READER*) = struct
+module Reader (* : READER *) = struct
   open PC;;
 
   type string_part =
@@ -87,7 +87,7 @@ module Reader (*: READER*) = struct
   and nt_digit str = 
     let nt1 = range '0' '9' in
     let nt1 = pack nt1 (let delta = int_of_char '0' in 
-                      fun digit -> int_of_char digit - delta) in
+                        fun digit -> int_of_char digit - delta) in
     nt1 str
   and nt_digit_a_f str = 
     let nt1 = range 'a' 'f' in
@@ -125,8 +125,8 @@ module Reader (*: READER*) = struct
     let nt1 = disj nt1 nt2 in
     let nt1 = maybe nt1 in
     let nt1 = pack nt1 (function
-                      | None -> true
-                      | Some sign -> sign) in
+                  | None -> true
+                  | Some sign -> sign) in
     nt1 str
   and nt_int str =
     let nt1 = caten nt_optional_sign nt_nat in
@@ -180,22 +180,17 @@ module Reader (*: READER*) = struct
       (function
        | None -> none_value
        | Some(x) -> x)
-  (*and nt_float str = 
-      let nt1 = nt_optional_sign in
-      let nt2 = disj (disj nt_float_A nt_float_B) nt_float_C in
-      let nt1 = caten nt1 nt2 in
-      nt1 str*)
-    and nt_float_A str = 
+  and nt_float_A str = 
     let nt_dot = char '.' in
     let nt_ip = pack (caten nt_integer_part nt_dot) (fun (i, _)-> i) in
     let nt_ipm = pack (caten nt_ip (maybe nt_mantissa)) (fun (i,m) ->
-                                                        match m with
-                                                        |Some m -> i+.m
-                                                        |None ->i) in 
+                     match m with
+                     |Some m -> i+.m
+                     |None ->i) in 
     let nt1 = pack (caten nt_ipm (maybe nt_exponent)) (fun (ipm, e) ->
-                                                        match e with
-                                                        |Some e -> ipm*.e
-                                                        |None -> ipm) in
+                  match e with
+                  |Some e -> ipm*.e
+                  |None -> ipm) in
     nt1 str
   and nt_float_B str = 
     let nt1 = char '.' in
@@ -203,29 +198,27 @@ module Reader (*: READER*) = struct
     let nt3 = maybe nt_exponent in
     let nt1 = caten (caten nt1 nt2) nt3 in
     let nt1 = pack nt1 (fun((_,manti) ,expo) ->
-                                              manti *. (match expo with
-                                              | Some x -> x
-                                              | None -> 1.)) in
+                  manti *. (match expo with
+                            | Some x -> x
+                            | None -> 1.)) in
     nt1 str
   and nt_float_C str =
-     let nt1 = nt_integer_part in
-     let nt2 = nt_exponent in
-     let nt1 = caten nt1 nt2 in
-     let nt1 = pack nt1 (fun (inte,expo)-> 
-                      inte *. expo) in
-     nt1 str
+    let nt1 = nt_integer_part in
+    let nt2 = nt_exponent in
+    let nt1 = caten nt1 nt2 in
+    let nt1 = pack nt1 (fun (inte,expo)-> 
+                  inte *. expo) in
+    nt1 str
   and nt_float str = 
-    let nt1 = maybe nt_optional_sign in
+    let nt1 = nt_optional_sign in
     let nt_float_type = disj (disj nt_float_A nt_float_B) nt_float_C in
-    let nt1 = pack (caten nt1 nt_float_type) (fun (sign, float_num) ->
-                                                            float_num *. 
-                                                            match sign with
-                                                            | false  -> -1
-                                                            | true -> 1
-                                                            | None -> 1) in
+    let nt1 = pack (caten nt1 nt_float_type)
+                (function
+                 | (false, x) -> (-. x)
+                 | (true, x) -> x) in
     nt1 str
   and nt_number str =
-    let nt1 = nt_float in
+    let nt1 = pack nt_float (fun x -> ScmReal x) in
     let nt2 = nt_frac in
     let nt3 = pack nt_int (fun n -> ScmRational(n, 1)) in
     let nt1 = (disj nt1 (disj nt2 nt3)) in
