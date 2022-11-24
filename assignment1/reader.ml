@@ -1,4 +1,4 @@
-#use "/home/gmayer/work/lang/ocaml/pc.ml";;
+#use "pc.ml";;
 
 exception X_not_yet_implemented;;
 exception X_this_should_not_happen of string;;
@@ -287,7 +287,11 @@ module Reader (* : READER *) = struct
     let nt1 = pack nt1 (fun (_, (n, _)) -> n) in
     let nt1 = pack nt1 char_of_int in
     nt1 str
-  and nt_string_part_dynamic str = raise X_not_yet_implemented
+  and nt_string_part_dynamic str = 
+      let nt1 = caten (caten (word "~{") nt_sexpr) (char '}') in
+      let nt1 = pack nt1 (fun ((_, sexpre),_)-> sexpre) in
+      let nt1 = pack nt1 (fun s -> Dynamic (ScmPair(ScmSymbol "format", ScmPair(ScmString "~a", ScmPair(s, ScmNil))))) in
+      nt1 str
   and nt_string_part_static str =
     let nt1 = disj_list [nt_string_part_simple;
                          nt_string_part_meta;
