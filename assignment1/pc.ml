@@ -4,7 +4,7 @@
  * Prorammer: Mayer Goldberg, 2021
  *)
 
-(* general list-processing procedures *)
+(* general list-processing procedures*)
 
 let list_of_string string =
   let rec run i s =
