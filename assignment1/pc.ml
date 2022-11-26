@@ -40,7 +40,7 @@ module PC = struct
 
   (* the parsing combinators defined here *)
   
-  exception X_not_yet_implemented;;
+  exception X_not_PC.X_no_match_implemented;;
 
   exception X_no_match;;
 
