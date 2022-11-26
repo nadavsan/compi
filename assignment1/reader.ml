@@ -61,6 +61,11 @@ module Reader (* : READER *) = struct
     let nt1 = caten nt1 nt_end_of_line_or_file in
     let nt1 = unitify nt1 in
     nt1 str
+  and nt_important_comment str = 
+    let nt1 = word "#\\{"  in
+    let nt2 = word "#\\}"  in
+    let nt1 = pack (caten(caten(nt1 nt_sexpr)) nt2) (fun ((_,s),_) -> s) in
+    nt1 str
   and nt_paired_comment str =                                         ;TODO                                   
     let nt1 = char '{' in
     let nt1 = caten nt1 nt_sexpr in
