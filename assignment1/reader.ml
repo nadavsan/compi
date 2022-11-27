@@ -61,16 +61,22 @@ module Reader (* : READER *) = struct
     let nt1 = caten nt1 nt_end_of_line_or_file in
     let nt1 = unitify nt1 in
     nt1 str
-  and nt_important_comment str = 
+  and nt_still_comment str = 
     let nt1 = word "#\\{"  in
     let nt2 = word "#\\}"  in
-    let nt1 = pack (caten(caten(nt1 nt_sexpr)) nt2) (fun ((_,s),_) -> s) in
+    let nt1 = disj nt1 nt2 in
     nt1 str
-  and nt_paired_comment str =                                         ;TODO                                   
-    let nt1 = char '{' in
-    let nt1 = caten nt1 nt_sexpr in
-    let nt1 = caten nt1 (char '}') in
-    let nt1 = pack nt1 (fun (_,_),_) -> () in
+  and nt_paired_comment str =                                         (*TODO*)
+    let nt_right_bracket = char '{' in
+    let nt_left_bracket = char '}' in
+    let nt1 = diff nt_any (disj nt_right_bracket nt_left_bracket) in
+    let nt1 = disj_list
+      [unitify nt1;
+      unitify nt_still_comment;
+      nt_comment] in
+    let nt1 = star nt1 in
+    let nt1 = caten nt_right_bracket (caten nt1 nt_left_bracket) in
+    let nt1 = unitify nt1 in
     nt1 str
   and nt_sexpr_comment str = 
     let nt1 = caten (word "#;") nt_sexpr in
@@ -251,7 +257,33 @@ module Reader (* : READER *) = struct
     let nt1 = const(fun ch -> ' ' < ch) in
     let nt1 = not_followed_by nt1 nt_symbol_char in
     nt1 str
-  and nt_char_named str = raise X_not_yet_implemented
+  and nt_space str = 
+      let nt1 = pack (word "space" (fun _ -> ScmChar(' '))) in
+      nt1 str
+  and nt_return str = 
+      let nt1 = pack (word "retuen" (fun _ -> ScmChar('\r'))) in
+      nt1 str
+  and nt_new_line str =
+      let nt1 = pack (word "newline" (fun _ -> ScmChar('\n'))) in
+      nt1 str
+  and nt_tab str = 
+      let nt1 = pack (word "tab" (fun _ -> ScmChar('\t'))) in
+      nt1 str
+  and nt_nul str = 
+      let nt1 = pack (word "nul" (fun _ -> ScmChar('\000'))) in
+      nt1 str
+  and nt_page str =
+      let nt1 = pack (word "page" (fun _ -> ScmChar('\012'))) in
+      nt1 str
+  and nt_char_named str = 
+      let nt1 = disj_list
+                [nt_space;
+                nt_return;
+                nt_new_line;
+                nt_tab;
+                nt_nul;
+                nt_nt_page] in
+      nt1 str
   and nt_char_hex str =
     let nt1 = caten (char_ci 'x') nt_hex_nat in
     let nt1 = pack nt1 (fun (_, n) -> n) in
@@ -271,7 +303,9 @@ module Reader (* : READER *) = struct
     let nt3 = one_of "!$^*_-+=<>?/" in
     let nt1 = disj nt1 (disj nt2 nt3) in
     nt1 str
-  and nt_symbol str = raise X_not_yet_implemented
+  and nt_symbol str = (*TODO (is that it?)*)
+      let nt1 = plus nt_symbol_char in
+      nt1 str
   and nt_string_part_simple str =
     let nt1 =
       disj_list [unitify (char '"'); unitify (char '\\'); unitify (word "~~");
@@ -336,8 +370,35 @@ module Reader (* : READER *) = struct
                          ScmNil in
                      ScmPair(ScmSymbol "string-append", argl)) in
     nt1 str
-  and nt_vector str = raise X_not_yet_implemented
-  and nt_list str = raise X_not_yet_implemented
+  and nt_vector str =
+    let nt1 = word "#(" in
+    let nt2 = caten nt_skip_star (char ')') in
+    let nt2 = pack nt2 (fun _ -> ScmVector []) in
+    let nt3 = plus nt_sexpr in
+    let nt4 = char ')' in
+    let nt3 = caten nt3 nt4 in
+    let nt3 = pack nt3 (fun (sexprs, _) -> ScmVector sexprs) in
+    let nt2 = disj nt2 nt3 in
+    let nt1 = caten nt1 nt2 in
+    let nt1 = pack nt1 (fun (_, sexpr) -> sexpr) in
+    nt1 str
+  and nt_list str = 
+    let nt1 = char '(' in
+    let nt2 = pack (caten nt_sexpr  ((char ')'))) (fun _ -> ScmNil) in
+    let nt3 = plus nt_sexpr in 
+    let nt4 =pack (char ')') (fun _ -> ScmNil) in
+    let nt5 = pack (caten (char '.') (caten nt_sexpr  (char ')')))
+                    (fun (_, (sexpr, _)) -> sexpr) in
+    let nt4 = disj nt4 nt5 in
+    let nt3 = pack (caten nt3 nt4)
+                  (fun (sexprs,sexpr) -> 
+                    List.fold_right
+                    (fun car cdr -> ScmPair (car, cdr))
+                    sexprs
+                    sexpr) in
+    let nt2 = disj nt2 nt3 in
+    let nt1 = pack (caten nt1 nt2) (fun (_, sexpr) ->sexpr) in
+    nt1 str
   and make_quoted_form nt_qf qf_name =
     let nt1 = caten nt_qf nt_sexpr in
     let nt1 = pack nt1
