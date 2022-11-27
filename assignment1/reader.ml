@@ -78,7 +78,7 @@ module Reader (* : READER *) = struct
     let nt1 = caten nt_right_bracket (caten nt1 nt_left_bracket) in
     let nt1 = unitify nt1 in
     nt1 str
-  and nt_sexpr_comment str = 
+  and nt_sexpr_comment str = (*TODO*)
     let nt1 = caten (word "#;") nt_sexpr in
     let nt1 = pack nt1 (fun _ -> ()) in
     nt1 str
@@ -258,22 +258,22 @@ module Reader (* : READER *) = struct
     let nt1 = not_followed_by nt1 nt_symbol_char in
     nt1 str
   and nt_space str = 
-      let nt1 = pack (word "space" (fun _ -> ScmChar(' '))) in
+      let nt1 = pack (word_ci "space") (fun _ -> ' ') in
       nt1 str
   and nt_return str = 
-      let nt1 = pack (word "retuen" (fun _ -> ScmChar('\r'))) in
+      let nt1 = pack (word_ci "retuen") (fun _ -> '\r') in
       nt1 str
   and nt_new_line str =
-      let nt1 = pack (word "newline" (fun _ -> ScmChar('\n'))) in
+      let nt1 = pack (word_ci "newline") (fun _ -> '\n') in
       nt1 str
   and nt_tab str = 
-      let nt1 = pack (word "tab" (fun _ -> ScmChar('\t'))) in
+      let nt1 = pack (word_ci "tab") (fun _ -> '\t') in
       nt1 str
   and nt_nul str = 
-      let nt1 = pack (word "nul" (fun _ -> ScmChar('\000'))) in
+      let nt1 = pack (word_ci "nul") (fun _ -> '\000') in
       nt1 str
   and nt_page str =
-      let nt1 = pack (word "page" (fun _ -> ScmChar('\012'))) in
+      let nt1 = pack (word_ci "page") (fun _ -> '\012') in
       nt1 str
   and nt_char_named str = 
       let nt1 = disj_list
@@ -282,7 +282,7 @@ module Reader (* : READER *) = struct
                 nt_new_line;
                 nt_tab;
                 nt_nul;
-                nt_nt_page] in
+                nt_page] in
       nt1 str
   and nt_char_hex str =
     let nt1 = caten (char_ci 'x') nt_hex_nat in
@@ -303,8 +303,9 @@ module Reader (* : READER *) = struct
     let nt3 = one_of "!$^*_-+=<>?/" in
     let nt1 = disj nt1 (disj nt2 nt3) in
     nt1 str
-  and nt_symbol str = (*TODO (is that it?)*)
-      let nt1 = plus nt_symbol_char in
+  and nt_symbol str = (*TODO*)
+      let nt1 = string_of_list (plus nt_symbol_char) in
+      let nt1 = ScmSymbol (nt1) in
       nt1 str
   and nt_string_part_simple str =
     let nt1 =
