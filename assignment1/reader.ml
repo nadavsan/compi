@@ -304,8 +304,9 @@ module Reader (* : READER *) = struct
     let nt1 = disj nt1 (disj nt2 nt3) in
     nt1 str
   and nt_symbol str = (*TODO*)
-      let nt1 = string_of_list (plus nt_symbol_char) in
-      let nt1 = ScmSymbol (nt1) in
+      let nt1 = plus nt_symbol_char in
+      let nt1 = pack nt1 string_of_list in
+      let nt1 = pack nt1 (fun s -> ScmSymbol(s)) in
       nt1 str
   and nt_string_part_simple str =
     let nt1 =
