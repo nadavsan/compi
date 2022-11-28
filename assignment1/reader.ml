@@ -1,4 +1,4 @@
-#use "pc.ml";;
+#use "/home/compi231/compi/repo/compi/assignment1/pc.ml";;
 
 exception X_not_yet_implemented;;
 exception X_this_should_not_happen of string;;
@@ -303,7 +303,11 @@ module Reader (* : READER *) = struct
     let nt3 = one_of "!$^*_-+=<>?/" in
     let nt1 = disj nt1 (disj nt2 nt3) in
     nt1 str
+<<<<<<< HEAD
   and nt_symbol str = (*TODO*)
+=======
+  and nt_symbol str =
+>>>>>>> 794a8cb (some tests failed, sent it anyway)
       let nt1 = plus nt_symbol_char in
       let nt1 = pack nt1 string_of_list in
       let nt1 = pack nt1 (fun s -> ScmSymbol(s)) in
@@ -379,10 +383,17 @@ module Reader (* : READER *) = struct
     let nt3 = plus nt_sexpr in
     let nt4 = char ')' in
     let nt3 = caten nt3 nt4 in
+<<<<<<< HEAD
     let nt3 = pack nt3 (fun (sexprs, _) -> ScmVector sexprs) in
     let nt2 = disj nt2 nt3 in
     let nt1 = caten nt1 nt2 in
     let nt1 = pack nt1 (fun (_, sexpr) -> sexpr) in
+=======
+    let nt3 = pack nt3 (fun (s, _) -> ScmVector s) in
+    let nt2 = disj nt2 nt3 in
+    let nt1 = caten nt1 nt2 in
+    let nt1 = pack nt1 (fun (_, s) -> s) in
+>>>>>>> 794a8cb (some tests failed, sent it anyway)
     nt1 str
   and nt_list str = 
     let nt1 = char '(' in
