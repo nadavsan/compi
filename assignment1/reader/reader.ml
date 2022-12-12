@@ -1,4 +1,4 @@
-#use "/home/compi231/compi/repo/compi/assignment1/pc.ml";;
+#use "pc.ml";;
 
 exception X_not_yet_implemented;;
 exception X_this_should_not_happen of string;;
@@ -37,7 +37,7 @@ module type READER = sig
   val scheme_sexpr_list_of_sexpr_list : sexpr list -> sexpr
 end;; (* end of READER signature *)
 
-module Reader (* : READER *) = struct
+module Reader  : READER  = struct
   open PC;;
 
   type string_part =
