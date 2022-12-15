@@ -37,7 +37,7 @@ module type READER = sig
   val scheme_sexpr_list_of_sexpr_list : sexpr list -> sexpr
 end;; (* end of READER signature *)
 
-module Reader (* : READER *) = struct
+module Reader : READER = struct
   open PC;;
 
   type string_part =
@@ -303,11 +303,7 @@ module Reader (* : READER *) = struct
     let nt3 = one_of "!$^*_-+=<>?/" in
     let nt1 = disj nt1 (disj nt2 nt3) in
     nt1 str
-<<<<<<< HEAD
-  and nt_symbol str = (*TODO*)
-=======
   and nt_symbol str =
->>>>>>> 794a8cb (some tests failed, sent it anyway)
       let nt1 = plus nt_symbol_char in
       let nt1 = pack nt1 string_of_list in
       let nt1 = pack nt1 (fun s -> ScmSymbol(s)) in
@@ -383,17 +379,10 @@ module Reader (* : READER *) = struct
     let nt3 = plus nt_sexpr in
     let nt4 = char ')' in
     let nt3 = caten nt3 nt4 in
-<<<<<<< HEAD
-    let nt3 = pack nt3 (fun (sexprs, _) -> ScmVector sexprs) in
-    let nt2 = disj nt2 nt3 in
-    let nt1 = caten nt1 nt2 in
-    let nt1 = pack nt1 (fun (_, sexpr) -> sexpr) in
-=======
     let nt3 = pack nt3 (fun (s, _) -> ScmVector s) in
     let nt2 = disj nt2 nt3 in
     let nt1 = caten nt1 nt2 in
     let nt1 = pack nt1 (fun (_, s) -> s) in
->>>>>>> 794a8cb (some tests failed, sent it anyway)
     nt1 str
   and nt_list str = 
     let nt1 = char '(' in
@@ -674,7 +663,7 @@ module Tag_Parser : TAG_PARSER = struct
     | ScmVoid | ScmBoolean _ | ScmChar _ | ScmString _ | ScmNumber _ ->
        ScmConst sexpr
     | ScmPair (ScmSymbol "quote", ScmPair (sexpr, ScmNil)) ->
-       raise X_not_yet_implemented
+       ScmConst sexpr
     | ScmPair (ScmSymbol "quasiquote", ScmPair (sexpr, ScmNil)) ->
        tag_parse (macro_expand_qq sexpr)
     | ScmSymbol var ->
@@ -935,12 +924,11 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
   let annotate_lexical_address =
     let rec run expr params env =
       match expr with
-      | ScmConst sexpr -> raise X_not_yet_implemented
-      | ScmVarGet (Var str) -> raise X_not_yet_implemented
-      | ScmIf (test, dit, dif) -> raise X_not_yet_implemented
-      | ScmSeq exprs -> raise X_not_yet_implemented
-      | ScmOr exprs -> raise X_not_yet_implemented
-      | ScmVarSet(Var v, expr) -> raise X_not_yet_implemented
+      | ScmConst sexpr -> ScmConst sexpr
+      | ScmVarGet (Var str) -> ScmVarGet' (lookup_in_env(str ,params ,env))
+      | ScmIf (test, dit, dif) -> ScmIf' (run test params env, run dit params env, run dif params env)
+      | ScmSeq exprs -> ScmSeq'(List.map (fun arg -> run arg params env) exprs)
+      | ScmOr exprs -> ScmOr'(list.ormap (fun arg -> run arg params env) exprs)
       (* this code does not [yet?] support nested define-expressions *)
       | ScmVarDef(Var v, expr) -> raise X_not_yet_implemented
       | ScmLambda (params', Simple, expr) -> raise X_not_yet_implemented
@@ -956,9 +944,11 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
   (* run this second *)
   let annotate_tail_calls = 
     let rec run in_tail = function
-      | (ScmConst' _) as orig -> raise X_not_yet_implemented
+      | (ScmConst' _) as orig -> orig
       | (ScmVarGet' _) as orig -> raise X_not_yet_implemented
-      | ScmIf' (test, dit, dif) -> raise X_not_yet_implemented
+      | ScmIf' (test, dit, dif) -> raise X_not_yet_implemented(*function
+                                    | test -> run false test
+                                    | dit -> run false *)
       | ScmSeq' [] -> raise X_not_yet_implemented
       | ScmSeq' (expr :: exprs) -> raise X_not_yet_implemented
       | ScmOr' [] -> raise X_not_yet_implemented
