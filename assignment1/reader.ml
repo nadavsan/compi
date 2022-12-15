@@ -1,4 +1,4 @@
-#use "/home/compi231/compi/repo/compi/assignment1/pc.ml";;
+#use "pc.ml";;
 
 exception X_not_yet_implemented;;
 exception X_this_should_not_happen of string;;
@@ -61,21 +61,18 @@ module Reader (* : READER *) = struct
     let nt1 = caten nt1 nt_end_of_line_or_file in
     let nt1 = unitify nt1 in
     nt1 str
-  and nt_still_comment str = 
-    let nt1 = word "#\\{"  in
-    let nt2 = word "#\\}"  in
-    let nt1 = disj nt1 nt2 in
-    nt1 str
   and nt_paired_comment str =                                         (*TODO*)
-    let nt_right_bracket = char '{' in
-    let nt_left_bracket = char '}' in
-    let nt1 = diff nt_any (disj nt_right_bracket nt_left_bracket) in
-    let nt1 = disj_list
-      [unitify nt1;
-      unitify nt_still_comment;
-      nt_comment] in
+    let nt_left_bracket = char '{' in
+    let nt1 = unitify nt_char in
+    let nt2 = unitify nt_string in
+    let nt3 = unitify nt_comment in
+    let nt4 = unitify nt_whitespace in
+    let nt_right_bracket = char '}' in
+    let nt5 = unitify (diff nt_any (disj nt_left_bracket nt_right_bracket)) in
+    let nt1 = disj_list [nt1; nt2; nt3; nt4; nt5] in
     let nt1 = star nt1 in
-    let nt1 = caten nt_right_bracket (caten nt1 nt_left_bracket) in
+    let nt1 = caten nt_left_bracket nt1 in
+    let nt1 = caten nt1 nt_right_bracket in
     let nt1 = unitify nt1 in
     nt1 str
   and nt_sexpr_comment str = (*TODO*)
@@ -303,11 +300,7 @@ module Reader (* : READER *) = struct
     let nt3 = one_of "!$^*_-+=<>?/" in
     let nt1 = disj nt1 (disj nt2 nt3) in
     nt1 str
-<<<<<<< HEAD
-  and nt_symbol str = (*TODO*)
-=======
   and nt_symbol str =
->>>>>>> 794a8cb (some tests failed, sent it anyway)
       let nt1 = plus nt_symbol_char in
       let nt1 = pack nt1 string_of_list in
       let nt1 = pack nt1 (fun s -> ScmSymbol(s)) in
@@ -383,17 +376,10 @@ module Reader (* : READER *) = struct
     let nt3 = plus nt_sexpr in
     let nt4 = char ')' in
     let nt3 = caten nt3 nt4 in
-<<<<<<< HEAD
-    let nt3 = pack nt3 (fun (sexprs, _) -> ScmVector sexprs) in
-    let nt2 = disj nt2 nt3 in
-    let nt1 = caten nt1 nt2 in
-    let nt1 = pack nt1 (fun (_, sexpr) -> sexpr) in
-=======
     let nt3 = pack nt3 (fun (s, _) -> ScmVector s) in
     let nt2 = disj nt2 nt3 in
     let nt1 = caten nt1 nt2 in
     let nt1 = pack nt1 (fun (_, s) -> s) in
->>>>>>> 794a8cb (some tests failed, sent it anyway)
     nt1 str
   and nt_list str = 
     let nt1 = char '(' in

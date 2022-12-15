@@ -924,15 +924,15 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
   let annotate_lexical_address =
     let rec run expr params env =
       match expr with
-      | ScmConst sexpr -> ScmConst sexpr
+      | ScmConst sexpr -> ScmConst' sexpr
       | ScmVarGet (Var str) -> ScmVarGet' (lookup_in_env(str ,params ,env))
       | ScmIf (test, dit, dif) -> ScmIf' (run test params env, run dit params env, run dif params env)
       | ScmSeq exprs -> ScmSeq'(List.map (fun arg -> run arg params env) exprs)
       | ScmOr exprs -> ScmOr'(list.ormap (fun arg -> run arg params env) exprs)
       (* this code does not [yet?] support nested define-expressions *)
-      | ScmVarDef(Var v, expr) -> raise X_not_yet_implemented
-      | ScmLambda (params', Simple, expr) -> raise X_not_yet_implemented
-      | ScmLambda (params', Opt opt, expr) -> raise X_not_yet_implemented
+      | ScmVarDef(Var v, expr) -> ScmVarDef' (tag_lexical_address_for_var v params env, run expr params env)
+      | ScmLambda (params', Simple, expr) -> ScmLambda' (params', Simple, (run expr params' lookup_in_env(str ,params ,env)) )
+      | ScmLambda (params', Opt opt, expr) -> ScmLambda' (params', opt, (run exp params'::opt) lookup_in_env(str ,params ,env))
       | ScmApplic (proc, args) ->
          ScmApplic' (run proc params env,
                      List.map (fun arg -> run arg params env) args,
