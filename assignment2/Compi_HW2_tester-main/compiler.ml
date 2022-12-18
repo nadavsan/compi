@@ -1,4 +1,4 @@
-#use "/home/compi231/compi/repo/compi/assignment2/pc.ml";;
+#use "pc.ml";;
 
 exception X_not_yet_implemented;;
 exception X_this_should_not_happen of string;;
@@ -603,7 +603,7 @@ module Tag_Parser : TAG_PARSER = struct
     | sexpr -> sexpr;;
 
   let rec macro_expand_and_clauses expr = function
-    | [] -> expr
+    | [] -> raise X_not_yet_implemented
     | expr' :: exprs -> raise X_not_yet_implemented;;
 
   let rec macro_expand_cond_ribs ribs =
@@ -657,13 +657,16 @@ module Tag_Parser : TAG_PARSER = struct
                            (ScmPair (ScmSymbol "begin", exprs),
                             ScmPair (remaining, ScmNil))))
     | _ -> raise (X_syntax "malformed cond-rib");;
-
-    let rec sepporate_params_vals = function
-    | ScmNil -> ([], [])
-    | ScmPair (ScmPair (param, ScmPair (valu, ScmNil)), ribs) -> 
-      let (params, valus) = sepporate_params_vals ribs in
-        (param :: params, valu :: valus)
-    | _ -> raise (X_syntax "couldn't sepporate to vals and params");;
+  
+  let rec list_of_car list new_list
+    match list with
+      | [] -> new_list
+      | _ -> list_of_car (cdr list) new_list::(car (car list))
+  
+  let rec list_of_cdr list new_list
+  match list with
+    | [] -> new_list
+    | _ -> list_of_car (cdr list) new_list::(cdr (car list))
 
   let rec tag_parse sexpr =
     match sexpr with
@@ -721,9 +724,9 @@ module Tag_Parser : TAG_PARSER = struct
            ScmLambda(unsymbolify_vars params, Opt opt, expr)
         | _ -> raise (X_syntax "invalid parameter list"))
     | ScmPair (ScmSymbol "let", ScmPair (ribs, exprs)) ->
-      let (params, valus) = sepporate_params_vals ribs in
+       let params = list_of_car ribs [] in
        let params = scheme_sexpr_list_of_sexpr_list params in
-       let vals = scheme_sexpr_list_of_sexpr_list valus in
+       let vals = scheme_sexpr_list_of_sexpr_list (list_of_cdr ribs []) in
        tag_parse ScmPair (ScmPair (ScmSymbol "lambda", ScmPair (params, exprs), vals))
     | ScmPair (ScmSymbol "let*", ScmPair (ScmNil, exprs)) ->
       tag_parse( ScmPair (ScmSymbol "let", ScmPair (ScmNil, exprs)))
