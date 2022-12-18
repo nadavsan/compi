@@ -962,12 +962,11 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
   let annotate_tail_calls = 
     let rec run in_tail = function
       | (ScmConst' _) as orig -> orig
-      | (ScmVarGet' _) as orig -> raise X_not_yet_implemented
-      | ScmIf' (test, dit, dif) -> raise X_not_yet_implemented(*function
-                                    | test -> run false test
-                                    | dit -> run false *)
-      | ScmSeq' [] -> raise X_not_yet_implemented
-      | ScmSeq' (expr :: exprs) -> raise X_not_yet_implemented
+      | (ScmVarGet' _) as orig -> orig
+      | ScmIf' (test, dit, dif) -> ScmIf' ((run test false), (run dit in_tail), (run dif in_tail))
+      | ScmSeq' [] -> ScmNil' 
+      | ScmSeq' (expr :: exprs) -> let seq = runl in_tail (expr :: exprs) in
+                                    ScmSeq'(seq)
       | ScmOr' [] -> raise X_not_yet_implemented
       | ScmOr' (expr :: exprs) -> raise X_not_yet_implemented
       | ScmVarSet' (var', expr') -> raise X_not_yet_implemented
@@ -989,7 +988,7 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
       | [] -> [run in_tail expr]
       | expr' :: exprs -> (run false expr) :: (runl in_tail expr' exprs)
     in
-    fun expr' -> raise X_not_yet_implemented;;
+    fun expr' -> run false expr';;
 
   (* auto_box *)
 
