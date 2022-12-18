@@ -604,13 +604,14 @@ module Tag_Parser : TAG_PARSER = struct
 
   let rec macro_expand_and_clauses expr = function
     | [] -> expr
-    | expr' :: exprs -> raise X_not_yet_implemented;;
+    | expr' :: exprs -> ScmPair (ScmSymbol "if", 
+      (ScmPair (expr, (ScmPair ((macro_expand_and_clauses expr' exprs),(ScmPair (ScmBoolean false ,ScmNil)))))));;
 
   let rec macro_expand_cond_ribs ribs =
     match ribs with
-    | ScmNil -> raise X_not_yet_implemented
+    | ScmNil -> ScmNil
     | ScmPair (ScmPair (ScmSymbol "else", exprs), ribs) ->
-       raise X_not_yet_implemented
+      ScmPair (ScmSymbol "begin", exprs)
     | ScmPair (ScmPair (expr,
                         ScmPair (ScmSymbol "=>",
                                  ScmPair (func, ScmNil))),
@@ -969,9 +970,9 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
                                     ScmOr'(or_list)
       | ScmVarSet' (var', expr') -> ScmVarSet'(var', (run false expr'))
       | ScmVarDef' (var', expr') -> ScmVarDef'(var', (run false expr'))
-      | (ScmBox' _) as expr' -> raise X_not_yet_implemented
-      | (ScmBoxGet' _) as expr' -> raise X_not_yet_implemented
-      | ScmBoxSet' (var', expr') -> raise X_not_yet_implemented
+      | (ScmBox' _) as expr' -> expr'
+      | (ScmBoxGet' _) as expr' -> expr'
+      | ScmBoxSet' (var', expr') -> ScmBoxSet' (var', (run false expr'))
       | ScmLambda' (params, Simple, expr) -> ScmLambda'(params, Simple, (run true expr))
       | ScmLambda' (params, Opt opt, expr) -> ScmLambda'(params, Opt opt, (run true expr))
       | ScmApplic' (proc, args, app_kind) ->
@@ -1059,8 +1060,25 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
                      List.map (fun bj -> (ai, bj)) bs')
                    as');;
 
-  let should_box_var name expr params = raise X_not_yet_implemented;;
 
+  let box_check name expr params = function
+      | (rd, wrt) ->
+        let r_w_pairs = cross_product rd wrt in
+        List.filter(fun (x, y) -> 
+          match x with
+            |  ) r_w_pairs
+        match r_w_pairs with
+          | (name_x, name_y) ->
+            if(name_x == name_y)
+        if (List.length(wrt) > 0)
+          then if (List.length(rd) > 0)
+            then let rec is_same_closure rd wrt = 
+              let read_and_write =
+
+
+  let should_box_var name expr params = 
+    let rd_wrt = (find_reads_and_writes name expr params) in
+    box_check name expr params rd_wrt;;
   let box_sets_and_gets name body =
     let rec run expr =
       match expr with
@@ -1118,9 +1136,9 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
     | ScmIf' (test, dit, dif) ->
        ScmIf' (auto_box test, auto_box dit, auto_box dif)
     | ScmSeq' exprs -> ScmSeq' (List.map auto_box exprs)
-    | ScmVarSet' (v, expr) -> raise X_not_yet_implemented
-    | ScmVarDef' (v, expr) -> raise X_not_yet_implemented
-    | ScmOr' exprs -> raise X_not_yet_implemented
+    | ScmVarSet' (v, expr) -> ScmVarSet' (v, auto_box expr)
+    | ScmVarDef' (v, expr) -> ScmVarDef' (v, auto_box expr)
+    | ScmOr' exprs -> ScmOr' (List.map auto_box exprs)
     | ScmLambda' (params, Simple, expr') ->
        let box_these =
          List.filter
