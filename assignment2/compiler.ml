@@ -736,8 +736,7 @@ module Tag_Parser : TAG_PARSER = struct
                     (ScmPair (var, ScmPair (value, ScmNil)), ScmNil),
                   exprs)) -> tag_parse ScmPair
                                           (ScmPair
-                                            ((ScmSymbol "let", ScmPair
-                                              (var, value)), exprs))
+                                            (ScmSymbol "let", ScmPair ((ScmPair (ScmPair (ScmPair (var, ScmNil),ScmPair (value, ScmNil)), ScmNil)), exprs)))
     | ScmPair (ScmSymbol "let*",
                ScmPair (ScmPair (ScmPair (var,
                                           ScmPair (arg, ScmNil)),
