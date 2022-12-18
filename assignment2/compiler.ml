@@ -261,7 +261,7 @@ module Reader : READER = struct
       let nt1 = pack (word_ci "space") (fun _ -> ' ') in
       nt1 str
   and nt_return str = 
-      let nt1 = pack (word_ci "retuen") (fun _ -> '\r') in
+      let nt1 = pack (word_ci "return") (fun _ -> '\r') in
       nt1 str
   and nt_new_line str =
       let nt1 = pack (word_ci "newline") (fun _ -> '\n') in
@@ -657,6 +657,16 @@ module Tag_Parser : TAG_PARSER = struct
                            (ScmPair (ScmSymbol "begin", exprs),
                             ScmPair (remaining, ScmNil))))
     | _ -> raise (X_syntax "malformed cond-rib");;
+  
+  let rec list_of_car list new_list
+    match list with
+      | [] -> new_list
+      | _ -> list_of_car (cdr list) new_list::(car (car list))
+  
+  let rec list_of_cdr list new_list
+  match list with
+    | [] -> new_list
+    | _ -> list_of_car (cdr list) new_list::(cdr (car list))
 
   let rec tag_parse sexpr =
     match sexpr with
@@ -714,19 +724,32 @@ module Tag_Parser : TAG_PARSER = struct
            ScmLambda(unsymbolify_vars params, Opt opt, expr)
         | _ -> raise (X_syntax "invalid parameter list"))
     | ScmPair (ScmSymbol "let", ScmPair (ribs, exprs)) ->
-       raise X_not_yet_implemented
+       let params = list_of_car ribs [] in
+       let params = scheme_sexpr_list_of_sexpr_list params in
+       let vals = scheme_sexpr_list_of_sexpr_list (list_of_cdr ribs []) in
+       tag_parse ScmPair (ScmPair (ScmSymbol "lambda", ScmPair (params, exprs), vals))
     | ScmPair (ScmSymbol "let*", ScmPair (ScmNil, exprs)) ->
-       raise X_not_yet_implemented
+       tag_parse ScmPair (ScmPair (ScmSymbol "let",  ScmPair (ScmNil, ScmPair (ScmNil, exprs))))
     | ScmPair (ScmSymbol "let*",
                ScmPair
                  (ScmPair
                     (ScmPair (var, ScmPair (value, ScmNil)), ScmNil),
-                  exprs)) -> raise X_not_yet_implemented
+                  exprs)) -> tag_parse ScmPair
+                                          (ScmPair
+                                            (ScmSymbol "let", ScmPair ((ScmPair (ScmPair (ScmPair (var, ScmNil),ScmPair (value, ScmNil)), ScmNil)), exprs)))
     | ScmPair (ScmSymbol "let*",
                ScmPair (ScmPair (ScmPair (var,
                                           ScmPair (arg, ScmNil)),
                                  ribs),
-                        exprs)) -> raise X_not_yet_implemented
+                        exprs)) -> 
+                           ScmPair
+                            (ScmPair
+                            (ScmSymbol "let", ScmPair
+                              (ScmPair (var, arg), 
+                              (tag_parse ScmPair
+                                (ScmPair
+                                  (ScmSymbol "let*", ScmPair
+                                    (var, value), exprs)), exprs))
     | ScmPair (ScmSymbol "letrec", ScmPair (ribs, exprs)) ->
        raise X_not_yet_implemented
     | ScmPair (ScmSymbol "and", ScmNil) -> raise X_not_yet_implemented
