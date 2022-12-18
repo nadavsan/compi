@@ -745,8 +745,8 @@ module Tag_Parser : TAG_PARSER = struct
                                                 ScmPair (arg, ScmNil)), ScmPair (ScmSymbol "let*",
                               ScmPair (ribs,exprs)))))
     | ScmPair (ScmSymbol "letrec", ScmPair (ribs, exprs)) ->
-      tag_parse (ScmPair (ScmSymbol "let", ScmPair (ribs, exprs)));;;
-    | ScmPair (ScmSymbol "and", ScmNil) -> raise X_not_yet_implemented
+      tag_parse (ScmPair (ScmSymbol "let", ScmPair (ribs, exprs)))
+    | ScmPair (ScmSymbol "and", ScmNil) -> ScmBoolean true
     | ScmPair (ScmSymbol "and", exprs) ->
        (match (scheme_list_to_ocaml exprs) with
         | expr :: exprs, ScmNil ->
