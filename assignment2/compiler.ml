@@ -729,29 +729,23 @@ module Tag_Parser : TAG_PARSER = struct
        let vals = scheme_sexpr_list_of_sexpr_list (list_of_cdr ribs []) in
        tag_parse ScmPair (ScmPair (ScmSymbol "lambda", ScmPair (params, exprs), vals))
     | ScmPair (ScmSymbol "let*", ScmPair (ScmNil, exprs)) ->
-       tag_parse ScmPair (ScmPair (ScmSymbol "let",  ScmPair (ScmNil, ScmPair (ScmNil, exprs))))
+      tag_parse( ScmPair (ScmSymbol "let", ScmPair (ScmNil, exprs)))
     | ScmPair (ScmSymbol "let*",
                ScmPair
                  (ScmPair
                     (ScmPair (var, ScmPair (value, ScmNil)), ScmNil),
-                  exprs)) -> tag_parse ScmPair
-                                          (ScmPair
-                                            (ScmSymbol "let", ScmPair ((ScmPair (ScmPair (ScmPair (var, ScmNil),ScmPair (value, ScmNil)), ScmNil)), exprs)))
+                  exprs)) -> tag_parse  (ScmPair (ScmSymbol "let", ScmPair (ScmPair (var, ScmPair (value, ScmNil)), exprs)))
+                  
     | ScmPair (ScmSymbol "let*",
                ScmPair (ScmPair (ScmPair (var,
                                           ScmPair (arg, ScmNil)),
                                  ribs),
                         exprs)) -> 
-                           ScmPair
-                            (ScmPair
-                            (ScmSymbol "let", ScmPair
-                              (ScmPair (var, arg), 
-                              (tag_parse ScmPair
-                                (ScmPair
-                                  (ScmSymbol "let*", ScmPair
-                                    (var, value), exprs)), exprs))
+                          tag_parse( ScmPair (ScmSymbol "let", ScmPair (ScmPair (var,
+                                                ScmPair (arg, ScmNil)), ScmPair (ScmSymbol "let*",
+                              ScmPair (ribs,exprs)))))
     | ScmPair (ScmSymbol "letrec", ScmPair (ribs, exprs)) ->
-       raise X_not_yet_implemented
+      tag_parse (ScmPair (ScmSymbol "let", ScmPair (ribs, exprs)));;;
     | ScmPair (ScmSymbol "and", ScmNil) -> raise X_not_yet_implemented
     | ScmPair (ScmSymbol "and", exprs) ->
        (match (scheme_list_to_ocaml exprs) with
