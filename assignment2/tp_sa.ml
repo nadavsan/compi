@@ -1,4 +1,4 @@
-#use "/home/compi231/compi/repo/compi/assignment2/pc.ml";;
+#use "pc.ml";;
 
 exception X_not_yet_implemented;;
 exception X_this_should_not_happen of string;;
@@ -9,8 +9,8 @@ let rec is_member a = function
 
 let rec gcd a b =
   match (a, b) with
-  | (0, b) -> b
-  | (a, 0) -> a
+  | (0, b) -> Int.abs b
+  | (a, 0) -> Int.abs a
   | (a, b) -> gcd b (a mod b);;
 
 type scm_number =
@@ -742,12 +742,12 @@ module Tag_Parser : TAG_PARSER = struct
                           tag_parse( ScmPair (ScmSymbol "let", ScmPair (ScmPair (var,
                                                 ScmPair (arg, ScmNil)), ScmPair (ScmSymbol "let*",
                               ScmPair (ribs,exprs)))))
-    | ScmPair (ScmSymbol "letrec", ScmPair (ribs, exprs)) ->
-      let (fus, fexpers) = sepporate_params_vals ribs in
-      let part1Let = List.map(lambda(x)(ScmPair(x,'whatever)))fus in
+    | ScmPair (ScmSymbol "letrec", ScmPair (ribs, exprs)) -> raise X_not_yet_implemented
+      (*let (fus, fexpers) = sepporate_params_vals ribs in
+      let part1Let = List.map(lambda(x)(ScmPair(x, (ScmPair ((ScmSymbol "'whatever"),ScmNil)))))fus in
       let part2Let = List.map2(lambda(x y)(ScmPair(Scmsymbol "set!" , ScmPair(x,y)))) fus fexpers in
       let fribs = ScmPair(art1Let,part2Let)
-      tag_parse(ScmPair(ScmSymbol "let" ,ScmPair(fribs,exprs)))
+      tag_parse(ScmPair(ScmSymbol "let" ,ScmPair(fribs,exprs)))*)
     | ScmPair (ScmSymbol "and", ScmNil) -> ScmBoolean true
     | ScmPair (ScmSymbol "and", exprs) ->
        (match (scheme_list_to_ocaml exprs) with
@@ -1070,29 +1070,24 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
                    as');;
 
 
-  let box_check name expr params = function
-      | (rd, wrt) ->
-        let r_w_pairs = cross_product rd wrt in
-        List.filter(fun (((var_X, env_X), (var_Y, env_Y)) (
-          match env_X with
-            | None -> Var' 
-            | param(major,_) ->
-            | free(_,minor) ->
-        ))  -> 
-          match x with
-            |  ) r_w_pairs
-        match r_w_pairs with
-          | (name_x, name_y) ->
-            if(name_x == name_y)
-        if (List.length(wrt) > 0)
-          then if (List.length(rd) > 0)
-            then let rec is_same_closure rd wrt = 
-              let read_and_write =
+  (*let box_check name expr params = function
+    | (rd, wrt) ->
+      let r_w_pairs = cross_product rd wrt in
+      List.filter(fun (((var_X, env_X), (var_Y, env_Y)) (
+      match var_X with
+        | Var' (name, Bound (major, _))-> match var_Y with
+                                              |Var' (name', Bound (major', _))->(major' == major && name == name')
+                                              |_->false
+        | Var' (name, Param minor) ->match var_Y with
+                                    |Var' (name', param (minor'))->(minor' == minor && name == name')
+                                    |_->false
+        | Var' (name, Free) ->false
+    )))*)
 
 
-  let should_box_var name expr params = 
-    let rd_wrt = (find_reads_and_writes name expr params) in
-    box_check name expr params rd_wrt;;
+  let should_box_var name expr params = true;;
+    (*let rd_wrt = (find_reads_and_writes name expr params) in
+    box_check name expr params rd_wrt;;*)
 
   let box_sets_and_gets name body =
     let rec run expr =
