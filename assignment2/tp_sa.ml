@@ -666,7 +666,19 @@ module Tag_Parser : TAG_PARSER = struct
         (param :: params, valu :: valus)
     | _ -> raise (X_syntax "couldn't sepporate to vals and params");;
 
-    let list_to_pairs = fun a b -> ScmPair (a,b);;
+  let rec letrec_ribs ribs = match ribs with
+      | ScmPair (ScmPair(foo,_), foos) -> ScmPair (ScmPair (foo, ScmPair
+                                          (ScmPair (ScmSymbol "quote", ScmPair 
+                                          (ScmSymbol "whatever", ScmNil)),
+                                          ScmNil)), letrec_ribs foos)
+      |ScmNil -> ScmNil
+      | _ -> raise (X_this_should_not_happen "letrec_ribs");;
+  
+  let rec letrec_body expers ribs = match ribs with
+    | ScmPair(rib, rest) -> 
+      ScmPair (ScmPair (ScmSymbol "set!",rib), letrec_body expers rest)
+    | ScmNil -> expers
+    | _ -> raise (X_this_should_not_happen "letrec_body");;
 
   let rec tag_parse sexpr =
     match sexpr with
@@ -745,15 +757,18 @@ module Tag_Parser : TAG_PARSER = struct
                                                 ScmPair (arg, ScmNil)), ScmPair (ScmSymbol "let*",
                               ScmPair (ribs,exprs)))))
     | ScmPair (ScmSymbol "letrec", ScmPair (ribs, exprs)) -> 
-      let (foos, fexpers) = sepporate_params_vals ribs in
+      let let_ribs = letrec_ribs ribs in
+      let let_body = letrec_body exprs ribs in
+      tag_parse (ScmPair (ScmSymbol "let", ScmPair (let_ribs, let_body)))
+      (*let (foos, fexpers) = sepporate_params_vals ribs in
       (*List.map is in ocaml but lambda(x) ... is in scheme so we need to change that to ocml too I think*)
-      let part1Let = List.map(lambda(x)(ScmPair(x, (ScmPair ((ScmSymbol "whatever"),ScmNil)))))foos in
+      let part1Let = List.map(fun (x) ScmPair(x, (ScmPair ((ScmSymbol "whatever"),ScmNil))))foos in
       let part1Let = fold_right list_to_pairs part1Let ScmNil in
       let part2Let = List.map2(lambda(x y)(ScmPair(Scmsymbol "set!" , ScmPair(x,ScmPair (y, ScmNil))))) foos fexpers in
       let part2Let = fold_right list_to_pairs part2Let expers in
       let my_letrec = ScmPair( ScmPair (ScmSymbol "let", part1Let), ScmPair (part2Let, ScmNil)) in
-      tag_parse(my_letrec)
-    | ScmPair (ScmSymbol "and", ScmNil) -> ScmBoolean true
+      tag_parse(my_letrec)*)
+    | ScmPair (ScmSymbol "and", ScmNil) -> tag_parse (ScmBoolean true)
     | ScmPair (ScmSymbol "and", exprs) ->
        (match (scheme_list_to_ocaml exprs) with
         | expr :: exprs, ScmNil ->
@@ -954,14 +969,14 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
     let rec run expr params env =
       match expr with
       | ScmConst sexpr -> ScmConst' sexpr
-      | ScmVarGet (Var str) -> ScmVarGet' (lookup_in_env(str ,params ,env))
+      | ScmVarGet (Var str) -> ScmVarGet' (tag_lexical_address_for_var str params env)
       | ScmIf (test, dit, dif) -> ScmIf' (run test params env, run dit params env, run dif params env)
       | ScmSeq exprs -> ScmSeq'(List.map (fun arg -> run arg params env) exprs)
-      | ScmOr exprs -> ScmOr'(list.ormap (fun arg -> run arg params env) exprs)
+      | ScmOr exprs -> ScmOr'(List.map (fun arg -> run arg params env) exprs)
       (* this code does not [yet?] support nested define-expressions *)
       | ScmVarDef(Var v, expr) -> ScmVarDef' (tag_lexical_address_for_var v params env, run expr params env)
-      | ScmLambda (params', Simple, expr) -> ScmLambda' (params', Simple, (run expr params' lookup_in_env(str ,params ,env)) )
-      | ScmLambda (params', Opt opt, expr) -> ScmLambda' (params', opt, (run exp params'::opt) lookup_in_env(str ,params ,env))
+      | ScmLambda (params', Simple, expr) -> ScmLambda' (params', Simple, (run expr params' (params::env)) )
+      | ScmLambda (params', Opt opt, expr) -> ScmLambda' (params', Opt opt, run expr (params'@[opt]) ((params@[opt])::env))
       | ScmApplic (proc, args) ->
          ScmApplic' (run proc params env,
                      List.map (fun arg -> run arg params env) args,
@@ -975,13 +990,11 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
     let rec run in_tail = function
       | (ScmConst' _) as orig -> orig
       | (ScmVarGet' _) as orig -> orig
-      | ScmIf' (test, dit, dif) -> ScmIf' ((run test false), (run dit in_tail), (run dif in_tail))
-      | ScmSeq' [] -> []
-      | ScmSeq' (expr :: exprs) -> let seq = runl in_tail (expr :: exprs) in
-                                    ScmSeq'(seq)
-      | ScmOr' [] -> []
-      | ScmOr' (expr :: exprs) -> let or_list = runl in_tail (expr::exprs) in
-                                    ScmOr'(or_list)
+      | ScmIf' (test, dit, dif) -> ScmIf' ((run false test), (run in_tail dit), (run in_tail dif))
+      | ScmSeq' [] -> ScmSeq' []
+      | ScmSeq' (expr :: exprs) -> ScmSeq' (runl in_tail expr  exprs)
+      | ScmOr' [] -> ScmOr' []
+      | ScmOr' (expr :: exprs) -> ScmOr' (runl in_tail expr exprs)
       | ScmVarSet' (var', expr') -> ScmVarSet'(var', (run false expr'))
       | ScmVarDef' (var', expr') -> ScmVarDef'(var', (run false expr'))
       | (ScmBox' _) as expr' -> expr'
@@ -1220,17 +1233,11 @@ let rec sexpr_of_expr' = function
      let dif = sexpr_of_expr' dif in
      ScmPair
        (ScmSymbol "if", ScmPair (test, ScmPair (dit, ScmPair (dif, ScmNil))))
-  | ScmOr'([]) -> ScmBoolean false
-  | ScmOr'([expr']) -> sexpr_of_expr' expr'
-  | ScmOr'(exprs) ->
-     ScmPair (ScmSymbol "or",
-              scheme_sexpr_list_of_sexpr_list
-                (List.map sexpr_of_expr' exprs))
   | ScmSeq' ([]) -> ScmVoid
   | ScmSeq' ([expr]) -> sexpr_of_expr' expr
   | ScmSeq' (exprs) ->
      ScmPair (ScmSymbol "begin", 
-              scheme_sexpr_list_of_sexpr_list
+              Reader.scheme_sexpr_list_of_sexpr_list
                 (List.map sexpr_of_expr' exprs))
   | ScmVarSet' (var, expr) ->
      let var = sexpr_of_var' var in
@@ -1242,7 +1249,7 @@ let rec sexpr_of_expr' = function
      ScmPair (ScmSymbol "define", ScmPair (var, ScmPair (expr, ScmNil)))
   | ScmLambda' (params, Simple, expr) ->
      let expr = sexpr_of_expr' expr in
-     let params = scheme_sexpr_list_of_sexpr_list
+     let params = Reader.scheme_sexpr_list_of_sexpr_list
                     (List.map (fun str -> ScmSymbol str) params) in
      ScmPair (ScmSymbol "lambda",
               ScmPair (params,
@@ -1264,7 +1271,7 @@ let rec sexpr_of_expr' = function
        (ScmSymbol "lambda", ScmPair (params, ScmPair (expr, ScmNil)))
   | ScmApplic' (ScmLambda' (params, Simple, expr), args, app_kind) ->
      let ribs =
-       scheme_sexpr_list_of_sexpr_list
+       Reader.scheme_sexpr_list_of_sexpr_list
          (List.map2
             (fun param arg -> ScmPair (ScmSymbol param, ScmPair (arg, ScmNil)))
             params
@@ -1277,11 +1284,10 @@ let rec sexpr_of_expr' = function
   | ScmApplic' (proc, args, app_kind) ->
      let proc = sexpr_of_expr' proc in
      let args =
-       scheme_sexpr_list_of_sexpr_list
+       Reader.scheme_sexpr_list_of_sexpr_list
          (List.map sexpr_of_expr' args) in
      ScmPair (proc, args)
-  (* for reversing macro-expansion... *)
-  | _ -> raise X_this_should_not_happen;;
+  | _ -> raise (X_this_should_not_happen "sexpr_of_expr");;
 
 let string_of_expr' expr =
   Printf.sprintf "%a" Reader.sprint_sexpr (sexpr_of_expr' expr);;
