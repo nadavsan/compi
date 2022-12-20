@@ -727,7 +727,7 @@ module Tag_Parser : TAG_PARSER = struct
       let (params, valus) = sepporate_params_vals ribs in
        let params = scheme_sexpr_list_of_sexpr_list params in
        let vals = scheme_sexpr_list_of_sexpr_list valus in
-       tag_parse ScmPair (ScmPair (ScmSymbol "lambda", ScmPair (params, exprs), vals))
+       tag_parse (ScmPair ((ScmPair (ScmSymbol "lambda", ScmPair (params, exprs)), vals)))
     | ScmPair (ScmSymbol "let*", ScmPair (ScmNil, exprs)) ->
       tag_parse( ScmPair (ScmSymbol "let", ScmPair (ScmNil, exprs)))
     | ScmPair (ScmSymbol "let*",
