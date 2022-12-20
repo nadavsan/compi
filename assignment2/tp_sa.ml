@@ -744,8 +744,9 @@ module Tag_Parser : TAG_PARSER = struct
                           tag_parse( ScmPair (ScmSymbol "let", ScmPair (ScmPair (var,
                                                 ScmPair (arg, ScmNil)), ScmPair (ScmSymbol "let*",
                               ScmPair (ribs,exprs)))))
-    | ScmPair (ScmSymbol "letrec", ScmPair (ribs, exprs)) ->
+    | ScmPair (ScmSymbol "letrec", ScmPair (ribs, exprs)) -> 
       let (foos, fexpers) = sepporate_params_vals ribs in
+      (*List.map is in ocaml but lambda(x) ... is in scheme so we need to change that to ocml too I think*)
       let part1Let = List.map(lambda(x)(ScmPair(x, (ScmPair ((ScmSymbol "whatever"),ScmNil)))))foos in
       let part1Let = fold_right list_to_pairs part1Let ScmNil in
       let part2Let = List.map2(lambda(x y)(ScmPair(Scmsymbol "set!" , ScmPair(x,ScmPair (y, ScmNil))))) foos fexpers in
@@ -1074,25 +1075,30 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
                    as');;
 
 
-  (*let box_check name expr params = function
-    | (rd, wrt) ->
-      let r_w_pairs = cross_product rd wrt in
-      List.filter(fun (((var_X, env_X), (var_Y, env_Y)) (
-      match var_X with
-        | Var' (name, Bound (major, _))-> match var_Y with
-                                              |Var' (name', Bound (major', _))->(major' == major && name == name')
-                                              |_->false
-        | Var' (name, Param minor) ->match var_Y with
-                                    |Var' (name', param (minor'))->(minor' == minor && name == name')
-                                    |_->false
-        | Var' (name, Free) ->false
-    )))*)
-
-    (*[(type, name)]*)
-
-  let should_box_var name expr params = true;;
-    (*let rd_wrt = (find_reads_and_writes name expr params) in
-    box_check name expr params rd_wrt;;*)
+  let should_box_var name expr params =
+    let (reads, writes) = find_reads_and_writes name expr params in
+    let rsXws = cross_product reads writes in
+    let rec run = function
+      | [] -> false
+      | ((Var' (n1, Param _), _),
+        (Var' (n2, Param _), _)) :: rest ->
+        run rest
+      | ((Var' (n1, Param _), _),
+        (Var' (n2, Bound _), _)) :: rest -> true
+      | ((Var' (n1, Bound _), _),
+        (Var' (n2, Param _), _)) :: rest -> true
+      | ((Var' (n1, Bound _), env1),
+        (Var' (n2, Bound _), env2)) :: rest ->
+        (not ((find_var_rib name env1) == (find_var_rib name env2)))
+        || (run rest)
+      | _ :: rest -> run rest
+    and find_var_rib name = function
+      | [] -> raise (X_this_should_not_happen "var must occur in env")
+      | rib :: env ->
+        if (List.mem name rib)
+        then (rib : string list)
+        else find_var_rib name env
+    in run rsXws;;
 
   let box_sets_and_gets name body =
     let rec run expr =
