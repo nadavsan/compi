@@ -666,6 +666,8 @@ module Tag_Parser : TAG_PARSER = struct
         (param :: params, valu :: valus)
     | _ -> raise (X_syntax "couldn't sepporate to vals and params");;
 
+    let list_to_pairs = fun a b -> ScmPair (a,b);;
+
   let rec tag_parse sexpr =
     match sexpr with
     | ScmVoid | ScmBoolean _ | ScmChar _ | ScmString _ | ScmNumber _ ->
@@ -742,12 +744,14 @@ module Tag_Parser : TAG_PARSER = struct
                           tag_parse( ScmPair (ScmSymbol "let", ScmPair (ScmPair (var,
                                                 ScmPair (arg, ScmNil)), ScmPair (ScmSymbol "let*",
                               ScmPair (ribs,exprs)))))
-    | ScmPair (ScmSymbol "letrec", ScmPair (ribs, exprs)) -> raise X_not_yet_implemented
-      (*let (fus, fexpers) = sepporate_params_vals ribs in
-      let part1Let = List.map(lambda(x)(ScmPair(x, (ScmPair ((ScmSymbol "'whatever"),ScmNil)))))fus in
-      let part2Let = List.map2(lambda(x y)(ScmPair(Scmsymbol "set!" , ScmPair(x,y)))) fus fexpers in
-      let fribs = ScmPair(art1Let,part2Let)
-      tag_parse(ScmPair(ScmSymbol "let" ,ScmPair(fribs,exprs)))*)
+    | ScmPair (ScmSymbol "letrec", ScmPair (ribs, exprs)) ->
+      let (foos, fexpers) = sepporate_params_vals ribs in
+      let part1Let = List.map(lambda(x)(ScmPair(x, (ScmPair ((ScmSymbol "whatever"),ScmNil)))))foos in
+      let part1Let = fold_right list_to_pairs part1Let ScmNil in
+      let part2Let = List.map2(lambda(x y)(ScmPair(Scmsymbol "set!" , ScmPair(x,ScmPair (y, ScmNil))))) foos fexpers in
+      let part2Let = fold_right list_to_pairs part2Let expers in
+      let my_letrec = ScmPair( ScmPair (ScmSymbol "let", part1Let), ScmPair (part2Let, ScmNil)) in
+      tag_parse(my_letrec)
     | ScmPair (ScmSymbol "and", ScmNil) -> ScmBoolean true
     | ScmPair (ScmSymbol "and", exprs) ->
        (match (scheme_list_to_ocaml exprs) with
@@ -1084,6 +1088,7 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
         | Var' (name, Free) ->false
     )))*)
 
+    (*[(type, name)]*)
 
   let should_box_var name expr params = true;;
     (*let rd_wrt = (find_reads_and_writes name expr params) in
