@@ -1,3 +1,5 @@
+#use "tp_sa.ml";;
+
 let file_to_string input_file =
   let in_channel = open_in input_file in
   let rec run () =
@@ -52,9 +54,45 @@ module Code_Generation : CODE_GENERATION= struct
     | [] -> []
     | s -> run (s, n, (fun s -> s));;
 
-  let remove_duplicates = raise X_not_yet_implemented;;
+  let remove_duplicate obj list = match list with (*(val::vals) obj = match obj with*)
+    | [] -> []
+    | list -> List.filter (fun x -> x != obj) list;;
 
-  let collect_constants = raise X_not_yet_implemented;;
+  let rec remove_duplicates = function
+    | [] -> []
+    | (curr::rest) -> (curr::(remove_duplicates(remove_duplicate curr rest)));;
+
+
+(*  type expr =
+  | ScmConst of sexpr
+  | ScmVarGet of var
+  | ScmIf of expr * expr * expr
+  | ScmSeq of expr list
+  | ScmOr of expr list
+  | ScmVarSet of var * expr
+  | ScmVarDef of var * expr
+  | ScmLambda of string list * lambda_kind * expr
+  | ScmApplic of expr * expr list;;*)
+  let rec collect_constants =
+    let rec run (expr'::exprs') =
+      match expr' with
+      | [] -> []
+      | ScmConst sexpr -> [sexpr]@(run expers')
+      | ScmVarGet (Var str) -> [str]@(run exprs')
+      | ScmIf (test, dit, dif) -> List.append((run test) List.append((run dit) List.append((run dif) (run expers'))))
+      | ScmSeq exprs -> (List.map (fun arg -> run arg) exprs)@(run expers')
+      | ScmOr exprs -> (List.map (fun arg -> run arg) exprs)@(run expers')
+      | ScmVarSet(Var v, expr) -> (List.append [name] (run expr))@(run expers')
+      | ScmVarDef(Var v, expr) -> List.append(v@(run expr) (run expers'))
+      | ScmLambda (_, _, expr) -> (run expr)@(run expers')
+      | ScmApplic (proc, args) ->
+                 (run proc,
+                     List.map (fun arg -> run arg) args,
+                     Non_Tail_Call)@(run expers')
+    in
+    fun expr ->
+    run expr [] [];;
+    
 
   let add_sub_constants =
     let rec run sexpr = match sexpr with
