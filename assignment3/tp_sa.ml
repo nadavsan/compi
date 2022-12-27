@@ -292,7 +292,7 @@ module Reader : READER = struct
     nt1 str  
   and nt_char str =
     let nt1 = word "#\\" in
-    let nt2 = disj nt_char_simple (disj nt_char_named nt_char_hex) in
+    let nt2 = disj nt_char_named (disj nt_char_simple nt_char_hex) in
     let nt1 = caten nt1 nt2 in
     let nt1 = pack nt1 (fun (_, ch) -> ScmChar ch) in
     nt1 str
@@ -386,7 +386,9 @@ module Reader : READER = struct
     nt1 str
   and nt_list str = 
     let nt1 = char '(' in
+    let nt0 = pack (char ')') (fun _ -> ScmNil) in
     let nt2 = pack (caten nt_sexpr  ((char ')'))) (fun _ -> ScmNil) in
+    let nt2 = disj nt0 nt2 in
     let nt3 = plus nt_sexpr in 
     let nt4 =pack (char ')') (fun _ -> ScmNil) in
     let nt5 = pack (caten (char '.') (caten nt_sexpr  (char ')')))
