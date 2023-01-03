@@ -73,19 +73,22 @@ module Code_Generation : CODE_GENERATION= struct
   | ScmVarDef of var * expr
   | ScmLambda of string list * lambda_kind * expr
   | ScmApplic of expr * expr list;;*)
-  let collect_constants =
-    let rec run expr' =
+    let rec collect_constants =
+    let rec run (expr'::exprs') =
       match expr' with
       | [] -> []
-      | ScmConst' (sexpr) -> [sexpr]
-      | ScmVarGet' (Var str) -> [str]
-      | ScmIf' (test, dit, dif) -> List.append((run test) List.append((run dit) (run dif)))
-      | ScmSeq' exprs -> (List.map (fun arg -> run arg) exprs)
-      | ScmOr' exprs -> (List.map (fun arg -> run arg) exprs)
-      | ScmVarSet'(Var v, expr) -> (List.append [name] (run expr))
-      | ScmVarDef'(Var v, expr) -> List.append(v@(run expr) (run expers'))
-      | ScmLambda' (_, _, expr) -> run expr
-      | ScmApplic' (proc, args) -> (run proc)@(List.map (fun arg -> run arg) args)
+      | ScmConst sexpr -> [sexpr]@(run expers')
+      | ScmVarGet (Var str) -> [str]@(run exprs')
+      | ScmIf (test, dit, dif) -> List.append((run test) List.append((run dit) List.append((run dif) (run expers'))))
+      | ScmSeq exprs -> (List.map (fun arg -> run arg) exprs)@(run expers')
+      | ScmOr exprs -> (List.map (fun arg -> run arg) exprs)@(run expers')
+      | ScmVarSet(Var v, expr) -> (List.append [name] (run expr))@(run expers')
+      | ScmVarDef(Var v, expr) -> List.append(v@(run expr) (run expers'))
+      | ScmLambda (_, _, expr) -> (run expr)@(run expers')
+      | ScmApplic (proc, args) ->
+                 (run proc,
+                     List.map (fun arg -> run arg) args,
+                     Non_Tail_Call)@(run expers')
     in
     fun expr ->
     run expr [] [];;
