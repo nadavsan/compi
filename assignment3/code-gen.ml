@@ -63,38 +63,21 @@ module Code_Generation : CODE_GENERATION= struct
     | (curr::rest) -> (curr::(remove_duplicates(remove_duplicate curr rest)));;
 
 
-(*  type expr =
-  | ScmConst of sexpr
-  | ScmVarGet of var
-  | ScmIf of expr * expr * expr
-  | ScmSeq of expr list
-  | ScmOr of expr list
-  | ScmVarSet of var * expr
-  | ScmVarDef of var * expr
-  | ScmLambda of string list * lambda_kind * expr
-  | ScmApplic of expr * expr list;;*)
-    let rec collect_constants =
-    let rec run (expr'::exprs') =
-      match expr' with
-      | [] -> []
+    let collect_constants =
+    let rec run = function
       | ScmConst' sexpr -> [sexpr]
-      | ScmVarGet' (Var (str, _)) -> [str]
-      | ScmIf' (test, dit, dif) -> List.append((run test) List.append((run dit) (run dif)))
-      | ScmSeq' es' -> (List.map (fun arg -> run arg) es')
-      | ScmOr' es' -> (List.map (fun arg -> run arg) es')
-      | ScmVarSet'(Var v, expr) -> (List.append [name] (run expr))
-      | ScmVarDef'(Var v, expr) -> v@(run expr) 
+      | ScmIf' (test, dit, dif) -> (run test)@(run dit)@(run dif)
+      | ScmSeq' es' -> List.concat(List.map run es')
+      | ScmOr' es' -> List.concat(List.map run es')
+      | ScmVarSet'(_, expr) -> run expr
+      | ScmVarDef'(_, expr) -> run expr
       | ScmLambda' (_, _, expr) -> run expr
-      | ScmApplic' (proc, args) ->
-                 (run proc,
-                     List.map (fun arg -> run arg) args,
-                     Non_Tail_Call)@(run expers')
-    in
-    fun expr ->
-    run expr [] [];;
-    (*and runs exprs' = 
-       List.fold_left (fun vars expr' -> vars @ (run expr')) [] exprs' in
-        run e' @ (runs es');;*)
+      | ScmApplic' (proc, args, _) ->
+                 (run proc) @ (List.concat (List.map run args))
+    and runs exprs' = 
+    List.fold_left (fun s expr' -> s@(run expr')) [] exprs'
+    in runs ;;
+    
 
   let add_sub_constants =
     let rec run sexpr = match sexpr with

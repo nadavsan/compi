@@ -1,0 +1,18 @@
+Reader
+( "test pair" )
+
+Tag_parser
+show "(let* ((a 1) (b 1)
+(a (+ a b)) (b (+ a b)) (a (+ a b))
+(b (+ a b))) (list a b))";;
+
+Semantic_Analyzer
+show "(set! x 34)";;
+
+show "(let ((x 45)) (set! x 34))";;
+
+show "(let* ((x #f) (y 'moshe)) (if x y))";;
+
+show "(lambda (x) (list (lambda () x) (lambda (y) (set! x y))))";;
+
+show "(lambda (x) (lambda (u) (u (lambda () x) (lambda (y) (set! x y)))))";;
