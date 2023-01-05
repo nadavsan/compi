@@ -78,10 +78,10 @@ module Code_Generation : CODE_GENERATION= struct
       match expr' with
       | [] -> []
       | ScmConst' sexpr -> [sexpr]
-      | ScmVarGet' (Var str) -> [str]@(run exprs')
+      | ScmVarGet' (Var (str, _)) -> [str]
       | ScmIf' (test, dit, dif) -> List.append((run test) List.append((run dit) (run dif)))
-      | ScmSeq' exprs -> (List.map (fun arg -> run arg) exprs)
-      | ScmOr' exprs -> (List.map (fun arg -> run arg) exprs)
+      | ScmSeq' es' -> (List.map (fun arg -> run arg) es')
+      | ScmOr' es' -> (List.map (fun arg -> run arg) es')
       | ScmVarSet'(Var v, expr) -> (List.append [name] (run expr))
       | ScmVarDef'(Var v, expr) -> v@(run expr) 
       | ScmLambda' (_, _, expr) -> run expr
@@ -92,7 +92,9 @@ module Code_Generation : CODE_GENERATION= struct
     in
     fun expr ->
     run expr [] [];;
-    
+    (*and runs exprs' = 
+       List.fold_left (fun vars expr' -> vars @ (run expr')) [] exprs' in
+        run e' @ (runs es');;*)
 
   let add_sub_constants =
     let rec run sexpr = match sexpr with
