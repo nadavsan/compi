@@ -653,12 +653,6 @@ module Tag_Parser : TAG_PARSER = struct
                             ScmPair (remaining, ScmNil))))
     | _ -> raise (X_syntax "malformed cond-rib");;
 
-    let rec sepporate_params_vals = function
-    | ScmNil -> ([], [])
-    | ScmPair (ScmPair (param, ScmPair (valu, ScmNil)), ribs) -> 
-      let (params, valus) = sepporate_params_vals ribs in
-        (param :: params, valu :: valus)
-    | _ -> raise (X_syntax "couldn't sepporate to vals and params");;
 
   let rec letrec_ribs ribs = match ribs with
       | ScmPair (ScmPair(foo,_), foos) -> ScmPair (ScmPair (foo, ScmPair
@@ -673,6 +667,13 @@ module Tag_Parser : TAG_PARSER = struct
       ScmPair (ScmPair (ScmSymbol "set!",rib), letrec_body expers rest)
     | ScmNil -> expers
     | _ -> raise (X_this_should_not_happen "letrec_body");;
+
+  let rec vars_exprs = function
+    | ScmNil -> ([], [])
+    | ScmPair (ScmPair (var, ScmPair (expr, ScmNil)), ribs) ->
+        let (vars, exprs) = vars_exprs ribs in
+        (var :: vars, expr :: exprs)
+    | _ -> raise (X_syntax "malformed let-ribs");;
 
   let rec tag_parse sexpr =
     match sexpr with
@@ -730,10 +731,13 @@ module Tag_Parser : TAG_PARSER = struct
            ScmLambda(unsymbolify_vars params, Opt opt, expr)
         | _ -> raise (X_syntax "invalid parameter list"))
     | ScmPair (ScmSymbol "let", ScmPair (ribs, exprs)) ->
-      let (params, valus) = sepporate_params_vals ribs in
-       let params = scheme_sexpr_list_of_sexpr_list params in
-       let vals = scheme_sexpr_list_of_sexpr_list valus in
-       tag_parse (ScmPair ((ScmPair (ScmSymbol "lambda", ScmPair (params, exprs)), vals)))
+      let (vars, es) = vars_exprs ribs in
+      let vars = scheme_sexpr_list_of_sexpr_list vars in
+      let es = scheme_sexpr_list_of_sexpr_list es in
+      tag_parse
+        (ScmPair (ScmPair (ScmSymbol "lambda",
+                            ScmPair (vars, exprs)),
+                  es))
     | ScmPair (ScmSymbol "let*", ScmPair (ScmNil, exprs)) ->
       tag_parse( ScmPair (ScmSymbol "let", ScmPair (ScmNil, exprs)))
     | ScmPair (ScmSymbol "let*",
@@ -754,14 +758,6 @@ module Tag_Parser : TAG_PARSER = struct
       let let_ribs = letrec_ribs ribs in
       let let_body = letrec_body exprs ribs in
       tag_parse (ScmPair (ScmSymbol "let", ScmPair (let_ribs, let_body)))
-      (*let (foos, fexpers) = sepporate_params_vals ribs in
-      (*List.map is in ocaml but lambda(x) ... is in scheme so we need to change that to ocml too I think*)
-      let part1Let = List.map(fun (x) ScmPair(x, (ScmPair ((ScmSymbol "whatever"),ScmNil))))foos in
-      let part1Let = fold_right list_to_pairs part1Let ScmNil in
-      let part2Let = List.map2(lambda(x y)(ScmPair(Scmsymbol "set!" , ScmPair(x,ScmPair (y, ScmNil))))) foos fexpers in
-      let part2Let = fold_right list_to_pairs part2Let expers in
-      let my_letrec = ScmPair( ScmPair (ScmSymbol "let", part1Let), ScmPair (part2Let, ScmNil)) in
-      tag_parse(my_letrec)*)
     | ScmPair (ScmSymbol "and", ScmNil) -> tag_parse (ScmBoolean true)
     | ScmPair (ScmSymbol "and", exprs) ->
        (match (scheme_list_to_ocaml exprs) with
