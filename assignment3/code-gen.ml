@@ -63,16 +63,6 @@ module Code_Generation : CODE_GENERATION= struct
     | (curr::rest) -> (curr::(remove_duplicates(remove_duplicate curr rest)));;
 
 
-(*  type expr =
-  | ScmConst of sexpr
-  | ScmVarGet of var
-  | ScmIf of expr * expr * expr
-  | ScmSeq of expr list
-  | ScmOr of expr list
-  | ScmVarSet of var * expr
-  | ScmVarDef of var * expr
-  | ScmLambda of string list * lambda_kind * expr
-  | ScmApplic of expr * expr list;;*)
   let collect_constants =
     let rec run = function
       | ScmConst' sexpr -> [sexpr]
@@ -97,7 +87,7 @@ module Code_Generation : CODE_GENERATION= struct
          [sexpr]
       | ScmSymbol sym -> [ScmString sym;ScmSymbol sym]
       | ScmPair (car, cdr) -> (run car) @ (run cdr) @ [sexpr]
-      | ScmVector sexprs -> raise X_not_yet_implemented
+      | ScmVector sexprs -> runs sexprs
     and runs sexprs =
       List.fold_left (fun full sexpr -> full @ (run sexpr)) [] sexprs
     in fun exprs' ->
@@ -111,7 +101,17 @@ module Code_Generation : CODE_GENERATION= struct
     | QuadFloat of float
     | ConstPtr of int;;
 
-  let search_constant_address = raise X_not_yet_implemented;;
+  let rec address_from_sexpr const_s = function
+      | sexpr::sexprs -> match sexpr with
+        | (add, s, _) -> if (s = const_s)
+                          then add
+                          else (address_from_sexpr const_s sexprs)
+        | _ -> raise (X_syntax "address_from_sexpr")
+      | _ -> raise (X_syntax "address_from_sexpr");;
+
+  let search_constant_address sexpr =
+    address_from_sexpr sexpr consts;; 
+     
 
   let const_repr sexpr loc table = match sexpr with
     | ScmVoid -> ([RTTI "T_void"], 1)
