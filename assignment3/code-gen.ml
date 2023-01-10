@@ -77,15 +77,15 @@ module Code_Generation : CODE_GENERATION= struct
     let rec run (expr'::exprs') =
       match expr' with
       | [] -> []
-      | ScmConst sexpr -> [sexpr]@(run expers')
-      | ScmVarGet (Var str) -> [str]@(run exprs')
-      | ScmIf (test, dit, dif) -> List.append((run test) List.append((run dit) List.append((run dif) (run expers'))))
-      | ScmSeq exprs -> (List.map (fun arg -> run arg) exprs)@(run expers')
-      | ScmOr exprs -> (List.map (fun arg -> run arg) exprs)@(run expers')
-      | ScmVarSet(Var v, expr) -> (List.append [name] (run expr))@(run expers')
-      | ScmVarDef(Var v, expr) -> List.append(v@(run expr) (run expers'))
-      | ScmLambda (_, _, expr) -> (run expr)@(run expers')
-      | ScmApplic (proc, args) ->
+      | [ScmConst (sexpr)]-> sexpr::(run exprs')
+      | [ScmVarGet (Var str)] -> [str] @ (run exprs')
+      | [ScmIf (test, dit, dif)] -> List.append((run test) List.append((run dit) List.append((run dif) (run expers'))))
+      | [ScmSeq exprs] -> (List.map (fun arg -> run arg) exprs)@(run expers')
+      | [ScmOr exprs] -> (List.map (fun arg -> run arg) exprs)@(run expers')
+      | [ScmVarSet(Var v, expr)] -> (List.append [name] (run expr))@(run expers')
+      | [ScmVarDef(Var v, expr)] -> List.append(v@(run expr) (run expers'))
+      | [ScmLambda (_, _, expr)] -> (run expr)@(run expers')
+      | [ScmApplic (proc, args)] ->
                  (run proc,
                      List.map (fun arg -> run arg) args,
                      Non_Tail_Call)@(run expers')
@@ -96,8 +96,8 @@ module Code_Generation : CODE_GENERATION= struct
 
   let add_sub_constants =
     let rec run sexpr = match sexpr with
-      | ScmVoid -> raise X_not_yet_implemented
-      | ScmNil -> raise X_not_yet_implemented
+      | ScmVoid -> []
+      | ScmNil -> []
       | ScmBoolean _ | ScmChar _ | ScmString _ | ScmNumber _ ->
          raise X_not_yet_implemented
       | ScmSymbol sym -> raise X_not_yet_implemented
