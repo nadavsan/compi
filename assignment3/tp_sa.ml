@@ -426,6 +426,8 @@ module Reader : READER = struct
 
 end;; (* end of struct Reader *)
 
+let read str = (Reader.nt_sexpr str 0).found;;
+
 let rec string_of_sexpr = function
 | ScmVoid -> "#<void>"
 | ScmNil -> "()"
@@ -738,22 +740,40 @@ module Tag_Parser : TAG_PARSER = struct
         (ScmPair (ScmPair (ScmSymbol "lambda",
                             ScmPair (vars, exprs)),
                   es))
+
+    (* let* --- case 1 *)
     | ScmPair (ScmSymbol "let*", ScmPair (ScmNil, exprs)) ->
-      tag_parse( ScmPair (ScmSymbol "let", ScmPair (ScmNil, exprs)))
+       tag_parse (ScmPair (ScmSymbol "let", ScmPair (ScmNil, exprs)))
+
+    (* let* --- case 2 *)
+    | ScmPair (ScmSymbol "let*",
+               ScmPair (ScmPair (ScmPair (v,
+                                          ScmPair (e, ScmNil)), ScmNil),
+                        exprs)) ->
+       tag_parse
+         (ScmPair (ScmSymbol "let",
+               ScmPair (ScmPair (ScmPair (v,
+                                          ScmPair (e, ScmNil)), ScmNil),
+                        exprs)))
+
+    (* let* --- case 3 *)
     | ScmPair (ScmSymbol "let*",
                ScmPair
                  (ScmPair
-                    (ScmPair (var, ScmPair (value, ScmNil)), ScmNil),
-                  exprs)) -> tag_parse  (ScmPair (ScmSymbol "let", ScmPair (ScmPair (var, ScmPair (value, ScmNil)), exprs)))
-                  
-    | ScmPair (ScmSymbol "let*",
-               ScmPair (ScmPair (ScmPair (var,
-                                          ScmPair (arg, ScmNil)),
-                                 ribs),
-                        exprs)) -> 
-                          tag_parse( ScmPair (ScmSymbol "let", ScmPair (ScmPair (var,
-                                                ScmPair (arg, ScmNil)), ScmPair (ScmSymbol "let*",
-                              ScmPair (ribs,exprs)))))
+                    (ScmPair (v, ScmPair (e, ScmNil)),
+                     ribs),
+                  exprs)) ->
+       tag_parse
+      (ScmPair
+         (ScmSymbol "let",
+          ScmPair
+            (ScmPair
+               (ScmPair (v, ScmPair (e, ScmNil)), ScmNil),
+             ScmPair
+               (ScmPair
+                  (ScmSymbol "let*", ScmPair (ribs, exprs)),
+                ScmNil))))
+
     | ScmPair (ScmSymbol "letrec", ScmPair (ribs, exprs)) -> 
       let let_ribs = letrec_ribs ribs in
       let let_body = letrec_body exprs ribs in
@@ -793,6 +813,9 @@ module Tag_Parser : TAG_PARSER = struct
 
 
 end;; (* end of struct Tag_Parser *)
+
+let parse str =
+  Tag_Parser.tag_parse (read str);;
 
 let rec sexpr_of_expr = function
 | ScmConst(ScmVoid) -> ScmVoid

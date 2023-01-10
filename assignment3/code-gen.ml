@@ -103,14 +103,14 @@ module Code_Generation : CODE_GENERATION= struct
 
   let rec address_from_sexpr const_s = function
       | sexpr::sexprs -> match sexpr with
-        | (add, s, _) -> if (s = const_s)
+        | (s, add, _) -> if (s = const_s)
                           then add
                           else (address_from_sexpr const_s sexprs)
         | _ -> raise (X_syntax "address_from_sexpr")
       | _ -> raise (X_syntax "address_from_sexpr");;
 
-  let search_constant_address sexpr =
-    address_from_sexpr sexpr consts;; 
+  let search_constant_address sexpr table =
+    address_from_sexpr sexpr table;; 
      
 
   let const_repr sexpr loc table = match sexpr with
@@ -295,7 +295,7 @@ module Code_Generation : CODE_GENERATION= struct
 
   let collect_free_vars =
     let rec run = function
-      | ScmConst' _ -> raise X_not_yet_implemented
+      | ScmConst' _ -> []
       | ScmVarGet' (Var' (v, Free)) -> [v]
       | ScmVarGet' _ -> raise X_not_yet_implemented
       | ScmIf' (test, dit, dif) -> raise X_not_yet_implemented
