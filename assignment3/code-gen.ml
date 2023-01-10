@@ -73,25 +73,20 @@ module Code_Generation : CODE_GENERATION= struct
   | ScmVarDef of var * expr
   | ScmLambda of string list * lambda_kind * expr
   | ScmApplic of expr * expr list;;*)
-  let rec collect_constants =
-    let rec run (expr'::exprs') =
-      match expr' with
-      | [] -> []
-      | [ScmConst (sexpr)]-> sexpr::(run exprs')
-      | [ScmVarGet (Var str)] -> [str] @ (run exprs')
-      | [ScmIf (test, dit, dif)] -> List.append((run test) List.append((run dit) List.append((run dif) (run expers'))))
-      | [ScmSeq exprs] -> (List.map (fun arg -> run arg) exprs)@(run expers')
-      | [ScmOr exprs] -> (List.map (fun arg -> run arg) exprs)@(run expers')
-      | [ScmVarSet(Var v, expr)] -> (List.append [name] (run expr))@(run expers')
-      | [ScmVarDef(Var v, expr)] -> List.append(v@(run expr) (run expers'))
-      | [ScmLambda (_, _, expr)] -> (run expr)@(run expers')
-      | [ScmApplic (proc, args)] ->
-                 (run proc,
-                     List.map (fun arg -> run arg) args,
-                     Non_Tail_Call)@(run expers')
-    in
-    fun expr ->
-    run expr [] [];;
+  let collect_constants =
+    let rec run = function
+      | ScmConst' sexpr -> [sexpr]
+      | ScmIf' (test, dit, dif) -> (run test)@(run dit)@(run dif)
+      | ScmSeq' es' -> List.concat(List.map run es')
+      | ScmOr' es' -> List.concat(List.map run es')
+      | ScmVarSet'(_, expr) -> run expr
+      | ScmVarDef'(_, expr) -> run expr
+      | ScmLambda' (_, _, expr) -> run expr
+      | ScmApplic' (proc, args, _) ->
+                 (run proc) @ (List.concat (List.map run args))
+    and runs exprs' = 
+    List.fold_left (fun s expr' -> s@(run expr')) [] exprs'
+    in runs ;;
     
 
   let add_sub_constants =
@@ -99,8 +94,8 @@ module Code_Generation : CODE_GENERATION= struct
       | ScmVoid -> []
       | ScmNil -> []
       | ScmBoolean _ | ScmChar _ | ScmString _ | ScmNumber _ ->
-         raise X_not_yet_implemented
-      | ScmSymbol sym -> raise X_not_yet_implemented
+         [sexpr]
+      | ScmSymbol sym -> [ScmString sym;ScmSymbol sym]
       | ScmPair (car, cdr) -> (run car) @ (run cdr) @ [sexpr]
       | ScmVector sexprs -> raise X_not_yet_implemented
     and runs sexprs =
