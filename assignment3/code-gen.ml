@@ -428,9 +428,19 @@ module Code_Generation : CODE_GENERATION= struct
         Printf.sprintf "\tmov rax, qword [rbp + 8 * (4 + %s)]" minor
       | ScmVarGet' (Var' (v, Bound (major, minor))) ->
          (Printf.sprintf "\tmov rax, qword [rbp + 8 * 2]\n
-                          \tmov rax, qword[rbp + 8 * %d]\n
-                          \tmov rax, qword[rbp + 8 * %d]\n" major minor)
-      | ScmIf' (test, dit, dif) -> raise X_not_yet_implemented
+                          \tmov rax, qword[rax + 8 * %d]\n
+                          \tmov rax, qword[rax + 8 * %d]\n" major minor)
+                          (*TODO correct?*)
+      | ScmIf' (test, dit, dif) -> (Printf.sprintf" 
+      \t%s\n
+      \tcmp rax, sob_false\n
+      \tje Lelse\n
+      \t%s\n
+      \tjmp Lexit\n
+      \tLelse:\n
+      \t%s\n
+      \tLexit:\n"
+      test dit dif)
       | ScmSeq' exprs' ->
          String.concat "\n"
            (List.map (run params env) exprs')
