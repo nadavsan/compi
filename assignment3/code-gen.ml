@@ -312,7 +312,7 @@ module Code_Generation : CODE_GENERATION= struct
       | ScmBoxSet' (Var' (v, Free), expr') -> (v)::(run expr')
       | ScmBoxSet' (_, expr') -> run expr'
       | ScmLambda' (_, _, expr') -> (run expr')
-      | ScmApplic' (expr', exprs', _) -> (run expr')@(run exprs')
+      | ScmApplic' (expr', exprs', _) -> (run expr')@(runs exprs')
     and runs exprs' =
       List.fold_left
         (fun vars expr' -> vars @ (run expr'))
@@ -416,15 +416,20 @@ module Code_Generation : CODE_GENERATION= struct
     let consts = make_constants_table exprs' in
     let free_vars = make_free_vars_table exprs' in
     let rec run params env = function
-      | ScmConst' sexpr -> raise X_not_yet_implemented
+      | ScmConst' sexpr -> 
+        let label = search_constant_address sexpr consts in
+        Printf.sprintf "\tmov rax, qword [%s]\n" label
       | ScmVarGet' (Var' (v, Free)) ->
          let label = search_free_var_table v free_vars in
          Printf.sprintf
            "\tmov rax, qword [%s]\n"
            label
-      | ScmVarGet' (Var' (v, Param minor)) -> raise X_not_yet_implemented
+      | ScmVarGet' (Var' (v, Param minor)) -> 
+        Printf.sprintf "\tmov rax, qword [rbp + 8 * (4 + %s)]" minor
       | ScmVarGet' (Var' (v, Bound (major, minor))) ->
-         raise X_not_yet_implemented
+         (Printf.sprintf "\tmov rax, qword [rbp + 8 * 2]\n
+                          \tmov rax, qword[rbp + 8 * %d]\n
+                          \tmov rax, qword[rbp + 8 * %d]\n" major minor)
       | ScmIf' (test, dit, dif) -> raise X_not_yet_implemented
       | ScmSeq' exprs' ->
          String.concat "\n"
