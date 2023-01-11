@@ -418,31 +418,33 @@ module Code_Generation : CODE_GENERATION= struct
     let rec run params env = function
       | ScmConst' sexpr -> 
         let label = search_constant_address sexpr consts in
-        Printf.sprintf "\tmov rax, qword [%s]\n" label
+        (Printf.sprintf "\tmov rax,%d+L_constants\n" label)
       | ScmVarGet' (Var' (v, Free)) ->
          let label = search_free_var_table v free_vars in
-         Printf.sprintf
+         (Printf.sprintf
            "\tmov rax, qword [%s]\n"
-           label
+           label)
       | ScmVarGet' (Var' (v, Param minor)) -> 
-        Printf.sprintf "\tmov rax, qword [rbp + 8 * (4 + %s)]" minor
+        (Printf.sprintf "\tmov rax, qword [rbp + 8 * (4 + %d)]" minor)
       | ScmVarGet' (Var' (v, Bound (major, minor))) ->
          (Printf.sprintf "\tmov rax, qword [rbp + 8 * 2]\n
                           \tmov rax, qword[rax + 8 * %d]\n
                           \tmov rax, qword[rax + 8 * %d]\n" major minor)
                           (*TODO correct?*)
       | ScmIf' (test, dit, dif) ->
-        run params env test
+        let label_else = make_if_else () in
+        let label_end = make_if_end () in
+        (run params env test)
         (Printf.sprintf"
         \tcmp rax, sob_false\n
-        \tje Lelse\n")
+        \tje %s\n" label_else)
         run params env dit
         (Printf.sprintf"
-        \tjmp Lexit\n
-        \tLelse:\n")
+        \tjmp %s\n
+        \t%s:\n" label_else label_end)
         run params env dif
         (Printf.sprintf"
-        \tLexit:\n")
+        \t%s:\n" label_end)
       | ScmSeq' exprs' ->
          String.concat "\n"
            (List.map (run params env) exprs')
