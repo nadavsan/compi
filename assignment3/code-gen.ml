@@ -431,16 +431,18 @@ module Code_Generation : CODE_GENERATION= struct
                           \tmov rax, qword[rax + 8 * %d]\n
                           \tmov rax, qword[rax + 8 * %d]\n" major minor)
                           (*TODO correct?*)
-      | ScmIf' (test, dit, dif) -> (Printf.sprintf" 
-      \t%s\n
-      \tcmp rax, sob_false\n
-      \tje Lelse\n
-      \t%s\n
-      \tjmp Lexit\n
-      \tLelse:\n
-      \t%s\n
-      \tLexit:\n"
-      test dit dif)
+      | ScmIf' (test, dit, dif) ->
+        run params env test
+        (Printf.sprintf"
+        \tcmp rax, sob_false\n
+        \tje Lelse\n")
+        run params env dit
+        (Printf.sprintf"
+        \tjmp Lexit\n
+        \tLelse:\n")
+        run params env dif
+        (Printf.sprintf"
+        \tLexit:\n")
       | ScmSeq' exprs' ->
          String.concat "\n"
            (List.map (run params env) exprs')
@@ -466,11 +468,23 @@ module Code_Generation : CODE_GENERATION= struct
             | None -> run params env (ScmConst' (ScmBoolean false)))
          in asm_code
       | ScmVarSet' (Var' (v, Free), expr') ->
-         raise X_not_yet_implemented
+         let label = search_free_var_table v free_vars in
+         run params env expr'
+         (Printf.sprintf 
+         "\tmov qword [%s], rax\n
+        \tmov rax, sob_viod\n" label)
       | ScmVarSet' (Var' (v, Param minor), expr') ->
-         raise X_not_yet_implemented
+         run params env expr'
+         (Printf.sprintf
+         "\tmov qword [rbp + 8 * (4 + %d)], rax\n
+         \tmov rax, sob_void\n" minor)
       | ScmVarSet' (Var' (v, Bound (major, minor)), expr') ->
-         raise X_not_yet_implemented
+         run params env expr'
+         (Printf.sprintf
+         "\tmov rbx, qword [rbp + 8 * 2]\n
+         \tmov rbx, qword [rbx + 8 * %d]\n
+         \tmov qword [rbx + 8 * %d], rax\n
+         \tmov rax, sob_void\n" major minor)
       | ScmVarDef' (Var' (v, Free), expr') ->
          let label = search_free_var_table v free_vars in
          (run params env expr')
