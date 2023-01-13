@@ -547,7 +547,30 @@ bind_primitive:
 
 ;;; PLEASE IMPLEMENT THIS PROCEDURE
 L_code_ptr_bin_apply:
-	
+        enter 0, 0
+        ;finding the list's length
+        xor rcx, rcx ;0
+        mov rax, qword [rbp + 1 * 8 * rbp] ;TODO: I don't know what am I doin'
+        mov rbx ,SOB_PAIR_CAR(rax) ;node val
+        my_loop:
+                cmp rbx, sob_nil ;if nill
+                je my_loop_end ;jmp end
+                inc rcx 
+                push rbx ;insrting val to stack
+                mov rax, qword [SOB_PAIR_CDR(rax)] ;next node
+                mov rbx ,SOB_PAIR_CAR(rax) ;next val
+        my_loop_end:
+
+        ;make values in the opposite order
+        ;pushing all argument one more time in the right order
+        mov rsi, ecx ;count-down
+        my_loop:
+        cmp rsi, 0 ;TODO: maybe 1 - not sure
+        mov rax, qword [rsp + 8 * ]
+        my_loop_end:
+
+        leave
+	ret
 L_code_ptr_is_null:
         ENTER
         cmp COUNT, 1
