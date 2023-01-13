@@ -421,7 +421,7 @@ module Code_Generation : CODE_GENERATION= struct
         (Printf.sprintf "\tmov rax,%d+L_constants\n" label)
       | ScmVarGet' (Var' (v, Free)) ->
          let label = search_free_var_table v free_vars in
-         (Printf.sprintf
+         ^(Printf.sprintf
            "\tmov rax, qword [%s]\n"
            label)
       | ScmVarGet' (Var' (v, Param minor)) -> 
@@ -435,15 +435,15 @@ module Code_Generation : CODE_GENERATION= struct
         let label_else = make_if_else () in
         let label_end = make_if_end () in
         (run params env test)
-        (Printf.sprintf"
+        ^(Printf.sprintf"
         \tcmp rax, sob_false\n
         \tje %s\n" label_else)
-        run params env dit
-        (Printf.sprintf"
+        ^(run params env dit)
+        ^(Printf.sprintf"
         \tjmp %s\n
         \t%s:\n" label_else label_end)
-        run params env dif
-        (Printf.sprintf"
+        ^(run params env dif)
+        ^(Printf.sprintf"
         \t%s:\n" label_end)
       | ScmSeq' exprs' ->
          String.concat "\n"
@@ -471,18 +471,18 @@ module Code_Generation : CODE_GENERATION= struct
          in asm_code
       | ScmVarSet' (Var' (v, Free), expr') ->
          let label = search_free_var_table v free_vars in
-         run params env expr'
-         (Printf.sprintf 
+         (run params env expr')
+        ^(Printf.sprintf 
          "\tmov qword [%s], rax\n
         \tmov rax, sob_viod\n" label)
       | ScmVarSet' (Var' (v, Param minor), expr') ->
-         run params env expr'
-         (Printf.sprintf
+         (run params env expr')
+         ^(Printf.sprintf
          "\tmov qword [rbp + 8 * (4 + %d)], rax\n
          \tmov rax, sob_void\n" minor)
       | ScmVarSet' (Var' (v, Bound (major, minor)), expr') ->
-         run params env expr'
-         (Printf.sprintf
+        (run params env expr')
+        ^(Printf.sprintf
          "\tmov rbx, qword [rbp + 8 * 2]\n
          \tmov rbx, qword [rbx + 8 * %d]\n
          \tmov qword [rbx + 8 * %d], rax\n
@@ -496,12 +496,22 @@ module Code_Generation : CODE_GENERATION= struct
          raise X_not_yet_supported
       | ScmVarDef' (Var' (v, Bound (major, minor)), expr') ->
          raise X_not_yet_supported
-      | ScmBox' (Var' (v, Param minor)) -> raise X_not_yet_implemented
+      | ScmBox' (Var' (v, Param minor)) -> 
+        (run params env (ScmVarGet'(Var' (v, Param minor))))
+        ^"\tmov rdi, 8\n"
+        ^"\tmov rbx, rax\n"
+        ^"\tcall malloc\n"
+        ^"\tmov qword [rax], rbx\n"
       | ScmBox' _ -> raise X_not_yet_implemented
       | ScmBoxGet' var' ->
          (run params env (ScmVarGet' var'))
          ^ "\tmov rax, qword [rax]\n"
-      | ScmBoxSet' (var', expr') -> raise X_not_yet_implemented
+      | ScmBoxSet' (var', expr') -> 
+        (run params env expr')
+        ^"\tpush rax\n"
+        ^(run params env (ScmVarGet' var'))
+        ^"\tpop qword [rax]\n"
+        ^"\tmov rax, sob_void\n"
       | ScmLambda' (params', Simple, body) ->
          let label_loop_env = make_lambda_simple_loop_env ()
          and label_loop_env_end = make_lambda_simple_loop_env_end ()
@@ -562,7 +572,66 @@ module Code_Generation : CODE_GENERATION= struct
          ^ "\tleave\n"
          ^ (Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params'))
          ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
-      | ScmLambda' (params', Opt opt, body) -> raise X_not_yet_implemented
+      | ScmLambda' (params', Opt opt, body) ->
+        let label_loop_env = make_lambda_opt_loop_env ()
+         and label_loop_env_end = make_lambda_opt_loop_env_end ()
+         and label_loop_params = make_lambda_opt_loop_params ()
+         and label_loop_params_end = make_lambda_opt_loop_params_end ()
+         and label_code = make_lambda_opt_code ()
+         and label_arity_ok = make_lambda_opt_arity_ ()
+         and label_end = make_lambda_simple_end ()
+         in
+         "\tmov rdi, (1 + 8 + 8)\t; sob closure\n"
+         ^ "\tcall malloc\n"
+         ^ "\tpush rax\n"
+         ^ (Printf.sprintf "\tmov rdi, 8 * %d\t; new rib\n" params)
+         ^ "\tcall malloc\n"
+         ^ "\tpush rax\n"
+         ^ (Printf.sprintf "\tmov rdi, 8 * %d\t; extended env\n" (env + 1))
+         ^ "\tcall malloc\n"
+         ^ "\tmov rdi, ENV\n"
+         ^ "\tmov rsi, 0\n"
+         ^ "\tmov rdx, 1\n"
+         ^ (Printf.sprintf "%s:\t; ext_env[i + 1] <-- env[i]\n"
+              label_loop_env)
+         ^ (Printf.sprintf "\tcmp rsi, %d\n" (env + 1))
+         ^ (Printf.sprintf "\tje %s\n" label_loop_env_end)
+         ^ "\tmov rcx, qword [rdi + 8 * rsi]\n"
+         ^ "\tmov qword [rax + 8 * rdx], rcx\n"
+         ^ "\tinc rsi\n"
+         ^ "\tinc rdx\n"
+         ^ (Printf.sprintf "\tjmp %s\n" label_loop_env)
+         ^ (Printf.sprintf "%s:\n" label_loop_env_end)
+         ^ "\tpop rbx\n"
+         ^ "\tmov rsi, 0\n"
+         ^ (Printf.sprintf "%s:\t; copy params\n" label_loop_params)
+         ^ (Printf.sprintf "\tcmp rsi, %d\n" params)
+         ^ (Printf.sprintf "\tje %s\n" label_loop_params_end)
+         ^ "\tmov rdx, qword [rbp + 8 * rsi + 8 * 4]\n"
+         ^ "\tmov qword [rbx + 8 * rsi], rdx\n"
+         ^ "\tinc rsi\n"
+         ^ (Printf.sprintf "\tjmp %s\n" label_loop_params)
+         ^ (Printf.sprintf "%s:\n" label_loop_params_end)
+         ^ "\tmov qword [rax], rbx\t; ext_env[0] <-- new_rib \n"
+         ^ "\tmov rbx, rax\n"
+         ^ "\tpop rax\n"
+         ^ "\tmov byte [rax], T_closure\n"
+         ^ "\tmov SOB_CLOSURE_ENV(rax), rbx\n"
+         ^ (Printf.sprintf "\tmov SOB_CLOSURE_CODE(rax), %s\n" label_code)
+         ^ (Printf.sprintf "\tjmp %s\n" label_end)
+         ^ (Printf.sprintf "%s:\t; lambda-simple body\n" label_code)
+         ^ (Printf.sprintf "\tcmp qword [rsp + 8 * 2], %d\n"
+              (List.length params'))
+         ^ (Printf.sprintf "\tje %s\n" label_arity_ok)
+         ^ "\tpush qword [rsp + 8 * 2]\n"
+         ^ (Printf.sprintf "\tpush %d\n" (List.length params'))
+         ^ "\tjmp L_error_incorrect_arity_simple\n"
+         ^ (Printf.sprintf "%s:\n" label_arity_ok)
+         ^ "\tenter 0, 0\n"
+         ^ (run (List.length params') (env + 1) body)
+         ^ "\tleave\n"
+         ^ (Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params'))
+         ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
       | ScmApplic' (proc, args, Non_Tail_Call) -> raise X_not_yet_implemented
       | ScmApplic' (proc, args, Tail_Call) -> raise X_not_yet_implemented
     and runs params env exprs' =
