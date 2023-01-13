@@ -1234,7 +1234,7 @@ L_code_ptr_raw_less_than_qq:
         mov rcx, rax
         mov rax, qword [rdi + 1 + 8] ; den1
         cqo
-        imul qword [rsi + 1]          ; num2
+        imul qword [rdi + 1]          ; num2
         sub rcx, rax
         jge .L_false
         mov rax, sob_boolean_true
@@ -1244,8 +1244,6 @@ L_code_ptr_raw_less_than_qq:
 .L_exit:
         LEAVE
         ret AND_KILL_FRAME(2)
-
-
 
 L_code_ptr_raw_equal_rr:
         ENTER

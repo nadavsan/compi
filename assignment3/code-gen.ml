@@ -411,6 +411,8 @@ module Code_Generation : CODE_GENERATION= struct
     make_make_label ".L_tc_recycle_frame_loop";;
   let make_tc_applic_recycle_frame_done =
     make_make_label ".L_tc_recycle_frame_done";;
+  let make_error_type =
+    make_make_label ".L_error_incorrect_type";;
 
   let code_gen exprs' =
     let consts = make_constants_table exprs' in
@@ -579,7 +581,7 @@ module Code_Generation : CODE_GENERATION= struct
         and label_loop_env_end = make_lambda_opt_loop_env_end ()
         and label_loop_params = make_lambda_opt_loop_params ()
         and label_loop_params_end = make_lambda_opt_loop_params_end ()
-	and label_loop_No_1 = make_lambda_opt_loop()
+	      and label_loop_No_1 = make_lambda_opt_loop()
         and label_loop_No_1_end = make_lambda_opt_loop_exit()
         and label_loop_No_2 = make_lambda_opt_loop()
         and label_loop_No_2_end= make_lambda_opt_loop_exit()
@@ -590,7 +592,6 @@ module Code_Generation : CODE_GENERATION= struct
         and label_arity_more = make_lambda_opt_arity_more()
         and label_end = make_lambda_opt_end () 
         and label_stack_ok = make_lambda_opt_stack_ok()
-
         in
         "\tmov rdi, (1 + 8 + 8)\t; sob closure\n"
          ^ "\tcall malloc\n"
@@ -668,7 +669,7 @@ module Code_Generation : CODE_GENERATION= struct
          ^ "\tmov qword [rdi], sob_nil\n"
          ^ (Printf.sprintf "\tjmp %s\n" label_stack_ok)
          ^ (Printf.sprintf "%s:\t\n"label_arity_more)
-         ^ "\tmov rsi, qword [rsp + (8 * 2)]\n"(***)
+         ^ "\tmov rsi, qword [rsp + (8 * 2)]\n"
          ^ (Printf.sprintf "\tlea rcx, [rsi - %d]\n" args_count)
          ^ "\tlea rsi, [rsp + (8 * rsi) + (8 * 3)]\n"
          ^ "\tmov r10, rsi\n"
@@ -717,7 +718,21 @@ module Code_Generation : CODE_GENERATION= struct
          ^ "\tleave\n"
          ^ (Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params'))
          ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
-      | ScmApplic' (proc, args, Non_Tail_Call) -> raise X_not_yet_implemented
+      | ScmApplic' (proc, args, Non_Tail_Call) -> 
+        let args_push = List.fold_right (fun cur acc -> acc^(run params env cur)^"\tpush rax\n") args "\n" in
+        let num = List.length(args)
+        and label_error_type = make_error_type ()
+        in
+        (Printf.sprintf"%s\n"args_push)
+        ^(Printf.sprintf"npush %d\n"num)
+        ^(run params env proc)
+        ^"\tassert_closure(rax)"
+        ^(Printf.sprintf "\tjne %s\n" label_error_type)
+        ^(Printf.sprintf "\tpush rax \n")
+        ^"\tcall rax"
+        ^"add rsp,8*1\n
+        \tpop rbx\n
+        \tlea rsp , [ rsp + 8* rbx ]\n"
       | ScmApplic' (proc, args, Tail_Call) -> raise X_not_yet_implemented
     and runs params env exprs' =
       List.map
