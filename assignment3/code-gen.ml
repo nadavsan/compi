@@ -736,11 +736,11 @@ module Code_Generation : CODE_GENERATION= struct
       | ScmApplic' (proc, args, Tail_Call) -> 
         (*run params env ScmApplic(proc, args, Non_Tail_Call)*)
         let arguments = (runs params env args) in
-        (Printf.sprintf"\t %s\n" arguments)
-        let num = List.length(args)
-        and label_error_type = make_error_type()
+        let num = List.length(args) in
+        and label_error_type = make_error_type ()
         and label_fix_stuck = make_fix_stack_label()
         in
+        (Printf.sprintf"\t %s\n" arguments)
         ^ (Printf.sprintf"npush %d\n"num)
         ^ (run params env proc)
         ^ "\tassert_closure(rax)"
