@@ -733,7 +733,25 @@ module Code_Generation : CODE_GENERATION= struct
         ^"add rsp,8*1\n
         \tpop rbx\n
         \tlea rsp , [ rsp + 8* rbx ]\n"
-      | ScmApplic' (proc, args, Tail_Call) -> raise X_not_yet_implemented
+      | ScmApplic' (proc, args, Tail_Call) -> 
+        (*run params env ScmApplic(proc, args, Non_Tail_Call)*)
+        let arguments = (runs params env args) in
+        (Printf.sprintf"\t %s\n" arguments)
+        let num = List.length(args)
+        and label_error_type = make_error_type()
+        and label_fix_stuck = make_fix_stack_label()
+        in
+        ^ (Printf.sprintf"npush %d\n"num)
+        ^ (run params env proc)
+        ^ "\tassert_closure(rax)"
+        ^ (Printf.sprintf "\tjne %s\n" label_error_type)
+        ^(Printf.sprintf "\tpush rax \n")
+        ^"\tpush qword,[rbp + 8 * 1]\n
+        \tpush [rbp]\n
+        \tadd rbx ,8*1\n"
+        ^ (Printf.sprintf "\tjmp %s \n",label_fix_stuck)
+        ^ "\tpop rbp\n
+        \tjmp rax \n"
     and runs params env exprs' =
       List.map
         (fun expr' ->

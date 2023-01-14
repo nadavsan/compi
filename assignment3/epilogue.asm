@@ -552,23 +552,30 @@ L_code_ptr_bin_apply:
         xor rcx, rcx ;0
         mov rax, qword [rbp + 1 * 8 * rbp] ;TODO: I don't know what am I doin'
         mov rbx ,SOB_PAIR_CAR(rax) ;node val
-        my_loop:
+        my_loop1:
                 cmp rbx, sob_nil ;if nill
-                je my_loop_end ;jmp end
+                je my_loop_end1 ;jmp end
                 inc rcx 
                 push rbx ;insrting val to stack
                 mov rax, qword [SOB_PAIR_CDR(rax)] ;next node
                 mov rbx ,SOB_PAIR_CAR(rax) ;next val
-        my_loop_end:
+        my_loop_end1:
 
-        ;make values in the opposite order
-        ;pushing all argument one more time in the right order
-        mov rsi, ecx ;count-down
-        my_loop:
-        cmp rsi, 0 ;TODO: maybe 1 - not sure
-        mov rax, qword [rsp + 8 * ]
-        my_loop_end:
-
+        ;make values in the opposite order:
+        ;1.pushing all argument one more time in the right order
+        mov rsi, rcx ;count-up
+        mov rcx, 1 
+        mov rdx, rsp ;marking the begining of the second pushing
+        my_loop2:
+                cmp rcx, rsi ; if rcx = n
+                je my_loop_end2 ;jump to the end
+                mov rax, qword [rdx + 8 * rcx] ;rax = next arg in correct order
+                push rax
+                inc rcx
+        my_loop_end2:
+        ;2.overwriting element above by element below but in correct order
+        
+        ;3.pushing number of arguments
         leave
 	ret
 L_code_ptr_is_null:
