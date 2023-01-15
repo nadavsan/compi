@@ -80,7 +80,8 @@ L_constants:
 	db T_boolean_false
 	db T_boolean_true
 	db T_char, 0x00	; #\x0
-	db T_boolean_false
+	db T_rational	; 1
+	dq 1, 1
 
 section .bss
 free_var_0:	; location of null?
@@ -482,7 +483,70 @@ main:
 	mov rsi, L_code_ptr_eq
 	call bind_primitive
 
-	mov rax,2+L_constants
+	 
+	mov rax,6+L_constants
+	push rax
+
+	push 1
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 0	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0001:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 1
+	je .L_lambda_simple_env_end_0001
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0001
+.L_lambda_simple_env_end_0001:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0001:	; copy params
+	cmp rsi, 0
+	je .L_lambda_simple_params_end_0001
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0001
+.L_lambda_simple_params_end_0001:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0001
+	jmp .L_lambda_simple_end_0001
+.L_lambda_simple_code_0001:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0001
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0001:
+	enter 0, 0
+	mov rax, qword [rbp + 8 * (4 + 0)]
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0001:	; new closure is in rax
+	assert_closure(rax)
+	jne .L_error_incorrect_type_0001
+	push rax 
+	call rax
+add rsp,8*1
+	pop rbx
+	lea rsp, [rsp + 8 * rbx]
+;	shl rbx, 3
+;	add rsp, rbx
+	.L_error_incorrect_type_0001:
 
 	mov rdi, rax
 	call print_sexpr_if_not_void
@@ -1033,9 +1097,10 @@ bind_primitive:
         LEAVE
         ret
 
+
 ;;; PLEASE IMPLEMENT THIS PROCEDURE
 L_code_ptr_bin_apply:
-	
+        
 L_code_ptr_is_null:
         ENTER
         cmp COUNT, 1
@@ -1720,9 +1785,9 @@ L_code_ptr_raw_less_than_qq:
         cqo
         imul qword [rdi + 1 + 8] ; den2
         mov rcx, rax
-        mov rax, qword [rdi + 1 + 8] ; den1
+        mov rax, qword [rsi + 1 + 8] ; den1
         cqo
-        imul qword [rsi + 1]          ; num2
+        imul qword [rdi + 1]          ; num2
         sub rcx, rax
         jge .L_false
         mov rax, sob_boolean_true
@@ -1732,8 +1797,6 @@ L_code_ptr_raw_less_than_qq:
 .L_exit:
         LEAVE
         ret AND_KILL_FRAME(2)
-
-
 
 L_code_ptr_raw_equal_rr:
         ENTER

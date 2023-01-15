@@ -65,17 +65,19 @@ module Code_Generation : CODE_GENERATION= struct
 
   let collect_constants =
     let rec run = function
+      |ScmVarGet' _ | ScmBox' _ | ScmBoxGet' _ -> []
       | ScmConst' sexpr -> [sexpr]
       | ScmIf' (test, dit, dif) -> (run test)@(run dit)@(run dif)
-      | ScmSeq' es' -> List.concat(List.map run es')
-      | ScmOr' es' -> List.concat(List.map run es')
-      | ScmVarSet'(_, expr) -> run expr
-      | ScmVarDef'(_, expr) -> run expr
-      | ScmLambda' (_, _, expr) -> run expr
-      | ScmApplic' (proc, args, _) ->
-                 (run proc) @ (List.concat (List.map run args))
+      | ScmSeq' es' -> runs es'
+      | ScmOr' es' -> runs es'
+      | ScmVarSet'(_, expr') -> run expr'
+      | ScmVarDef'(_, expr') -> run expr'
+      | ScmBoxSet'(_, expr') -> run expr'
+      | ScmLambda' (_, _, expr') -> run expr';
+      | ScmApplic' (proc', args', _) ->
+                 (run proc') @ (runs args')
     and runs exprs' = 
-    List.fold_left (fun s expr' -> s@(run expr')) [] exprs'
+      List.fold_left (fun s expr' -> s@(run expr')) [] exprs'
     in runs ;;
     
 
@@ -427,7 +429,7 @@ module Code_Generation : CODE_GENERATION= struct
            "\tmov rax, qword [%s]\n"
            label)
       | ScmVarGet' (Var' (v, Param minor)) -> 
-        (Printf.sprintf "\tmov rax, qword [rbp + 8 * (4 + %d)]" minor)
+        (Printf.sprintf "\tmov rax, qword [rbp + 8 * (4 + %d)]\n" minor)
       | ScmVarGet' (Var' (v, Bound (major, minor))) ->
          (Printf.sprintf "\tmov rax, qword [rbp + 8 * 2]\n
                           \tmov rax, qword[rax + 8 * %d]\n
@@ -438,12 +440,12 @@ module Code_Generation : CODE_GENERATION= struct
         let label_end = make_if_end () in
         (run params env test)
         ^(Printf.sprintf"
-        \tcmp rax, sob_false\n
+        \tcmp rax, sob_boolean_false\n
         \tje %s\n" label_else)
         ^(run params env dit)
         ^(Printf.sprintf"
         \tjmp %s\n
-        \t%s:\n" label_else label_end)
+        \t%s:\n" label_end label_else)
         ^(run params env dif)
         ^(Printf.sprintf"
         \t%s:\n" label_end)
@@ -720,30 +722,33 @@ module Code_Generation : CODE_GENERATION= struct
          ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
          (*lev start*)
       | ScmApplic' (proc, args, Non_Tail_Call) -> 
-        (*let args_push = List.fold_right (fun cur acc -> acc^(run params env cur)^"\tpush rax\n") args "\n" in*)
-        let arguments = (runs params env args) 
+        let args_push = List.fold_right (fun cur acc -> acc^(run params env cur)^"\tpush rax\n") args "\n" 
+        (*let arguments = (runs params env args) *)
         and num = List.length(args)
         and label_error_type = make_error_type()
         in
-        (Printf.sprintf"\t %s\n" arguments)
-        ^ (Printf.sprintf"npush %d\n"num)
+        (Printf.sprintf"\t %s\n" args_push)
+        ^ (Printf.sprintf"\tpush %d\n"num)
         ^ (run params env proc)
-        ^ "\tassert_closure(rax)"
+        ^ "\tassert_closure(rax)\n"
         ^ (Printf.sprintf "\tjne %s\n" label_error_type)
-        ^(Printf.sprintf "\tpush rax \n")
-        ^"\tcall rax"
+        ^"\tpush rax \n"
+        ^"\tcall rax\n"
         ^"add rsp,8*1\n"
         ^"\tpop rbx\n"
-        ^"\tlea rsp , [ rsp + 8* rbx ]\n"
+        ^"\tlea rsp, [rsp + 8 * rbx]\n"
+        ^";\tshl rbx, 3\n"
+        ^";\tadd rsp, rbx\n"
+        ^(Printf.sprintf "\t%s:\n" label_error_type)
         (*lev's end*)
       | ScmApplic' (proc, args, Tail_Call) -> 
-        (*run params env ScmApplic(proc, args, Non_Tail_Call)*)
-        let arguments = (runs params env args) in
-        (Printf.sprintf"\t %s\n" arguments)
-        let num = List.length(args)
+        (run params env (ScmApplic'(proc, args, Non_Tail_Call)))
+        (*let arguments = (runs params env args) 
+        and num = List.length(args) 
         and label_error_type = make_error_type()
         and label_fix_stuck = make_fix_stack_label()
         in
+        (Printf.sprintf"\t %s\n" arguments)
         ^ (Printf.sprintf"npush %d\n"num)
         ^ (run params env proc)
         ^ "\tassert_closure(rax)"
@@ -754,7 +759,7 @@ module Code_Generation : CODE_GENERATION= struct
         \tadd rbx ,8*1\n"
         ^ (Printf.sprintf "\tjmp %s \n",label_fix_stuck)
         ^ "\tpop rbp\n
-        \tjmp rax \n"
+        \tjmp rax \n"*)
     and runs params env exprs' =
       List.map
         (fun expr' ->
