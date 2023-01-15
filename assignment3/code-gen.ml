@@ -575,7 +575,7 @@ module Code_Generation : CODE_GENERATION= struct
          ^ "\tleave\n"
          ^ (Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params'))
          ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
-      | ScmLambda' (params', Opt opt, body) ->
+      | ScmLambda' (params', Opt opt, body) -> (*raise X_not_yet_implemented*)
         let args_count = List.length params' in
         let label_loop_env = make_lambda_opt_loop_env ()
         and label_loop_env_end = make_lambda_opt_loop_env_end ()
@@ -669,14 +669,14 @@ module Code_Generation : CODE_GENERATION= struct
          ^ "\tmov qword [rdi], sob_nil\n"
          ^ (Printf.sprintf "\tjmp %s\n" label_stack_ok)
          ^ (Printf.sprintf "%s:\t\n"label_arity_more)
-         ^ "\tmov rsi, qword [rsp + (8 * 2)]\n"
+         ^ "\tmov rsi, qword [rsp + (8 * 2)]\n"(***)
          ^ (Printf.sprintf "\tlea rcx, [rsi - %d]\n" args_count)
-         ^ "\tlea rsi, [rsp + (8 * rsi) + (8 * 3)]\n"
+         ^ "\tlea rsi, [rsp + (8 * rsi) + (8 * 2)]\n"
          ^ "\tmov r10, rsi\n"
          ^ "\tmov r9, sob_nil\n"
          ^ (Printf.sprintf "%s:\t\n" label_loop_No_2)
          ^ "\tcmp rcx, 0\n"
-         ^ (Printf.sprintf "\tjmp %s\n" label_loop_No_2_end)
+         ^ (Printf.sprintf "\tje %s\n" label_loop_No_2_end)
          ^ "\tmov rdi, 1 + 8 + 8\n"
          ^ "\tcall malloc\n"
          ^ "\tmov byte [rax], T_pair\n"
@@ -690,11 +690,11 @@ module Code_Generation : CODE_GENERATION= struct
          ^ (Printf.sprintf "%s:\t\n"label_loop_No_2_end)
          ^ "\tmov qword [r10], r9\n"
          ^ "\tsub r10, 8 * 1; the new dest!\n"
-         ^ (Printf.sprintf "\tlea rsi, [rsp + (8 * (%d - 1 +2))];the new src\n" args_count)
+         ^ (Printf.sprintf "\tlea rsi, [rsp + (8 * (%d + 2))];the new src\n" args_count)
          ^ (Printf.sprintf "\tmov rcx, %d \n" args_count)
          ^ (Printf.sprintf "%s:\t\n"label_loop_No_3)
          ^ "\tcmp rcx, 0\n"
-         ^ (Printf.sprintf "\tjmp %s\n" label_loop_No_3_end)
+         ^ (Printf.sprintf "\tje %s\n" label_loop_No_3_end)
          ^ "\tmov rax, qword [rsi]\n"
          ^ "\tmov qword [r10], rax\n"
          ^ "\tsub r10, 8 * 1\n"
@@ -714,9 +714,9 @@ module Code_Generation : CODE_GENERATION= struct
          ^ "\tmov rsp, r10\n"
          ^ (Printf.sprintf "%s:\t\n" label_stack_ok)
          ^ "\tenter 0, 0\n"
-         ^ (run (List.length params') (env + 1) body)
+         ^ (run (List.length params' + 1) (env + 1) body)
          ^ "\tleave\n"
-         ^ (Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params'))
+         ^ (Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params' + 1))
          ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
       | ScmApplic' (proc, args, Non_Tail_Call) -> 
         let args_push = List.fold_right (fun cur acc -> acc^(run params env cur)^"\tpush rax\n") args "\n" in
