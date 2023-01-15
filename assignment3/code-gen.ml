@@ -718,29 +718,32 @@ module Code_Generation : CODE_GENERATION= struct
          ^ "\tleave\n"
          ^ (Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params'))
          ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
+         (*lev start*)
       | ScmApplic' (proc, args, Non_Tail_Call) -> 
-        let args_push = List.fold_right (fun cur acc -> acc^(run params env cur)^"\tpush rax\n") args "\n" in
-        let num = List.length(args)
-        and label_error_type = make_error_type ()
+        (*let args_push = List.fold_right (fun cur acc -> acc^(run params env cur)^"\tpush rax\n") args "\n" in*)
+        let arguments = (runs params env args) 
+        and num = List.length(args)
+        and label_error_type = make_error_type()
         in
-        (Printf.sprintf"%s\n"args_push)
-        ^(Printf.sprintf"npush %d\n"num)
-        ^(run params env proc)
-        ^"\tassert_closure(rax)"
-        ^(Printf.sprintf "\tjne %s\n" label_error_type)
+        (Printf.sprintf"\t %s\n" arguments)
+        ^ (Printf.sprintf"npush %d\n"num)
+        ^ (run params env proc)
+        ^ "\tassert_closure(rax)"
+        ^ (Printf.sprintf "\tjne %s\n" label_error_type)
         ^(Printf.sprintf "\tpush rax \n")
         ^"\tcall rax"
-        ^"add rsp,8*1\n
-        \tpop rbx\n
-        \tlea rsp , [ rsp + 8* rbx ]\n"
+        ^"add rsp,8*1\n"
+        ^"\tpop rbx\n"
+        ^"\tlea rsp , [ rsp + 8* rbx ]\n"
+        (*lev's end*)
       | ScmApplic' (proc, args, Tail_Call) -> 
         (*run params env ScmApplic(proc, args, Non_Tail_Call)*)
         let arguments = (runs params env args) in
-        let num = List.length(args) in
-        and label_error_type = make_error_type ()
+        (Printf.sprintf"\t %s\n" arguments)
+        let num = List.length(args)
+        and label_error_type = make_error_type()
         and label_fix_stuck = make_fix_stack_label()
         in
-        (Printf.sprintf"\t %s\n" arguments)
         ^ (Printf.sprintf"npush %d\n"num)
         ^ (run params env proc)
         ^ "\tassert_closure(rax)"
