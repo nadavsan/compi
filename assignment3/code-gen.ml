@@ -722,24 +722,24 @@ module Code_Generation : CODE_GENERATION= struct
          ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
          (*lev start*)
       | ScmApplic' (proc, args, Non_Tail_Call) -> 
-        let args_push = List.fold_right (fun cur acc -> acc^(run params env cur)^"\tpush rax\n") args "\n" 
+        let args_push = List.fold_right (fun cur acc -> acc^(run params env cur)^"\tpush rax\n") args "" 
         (*let arguments = (runs params env args) *)
         and num = List.length(args)
-        and label_error_type = make_error_type()
+        (*and label_error_type = make_error_type()*)
         in
-        (Printf.sprintf"\t %s\n" args_push)
+        args_push
         ^ (Printf.sprintf"\tpush %d\n"num)
         ^ (run params env proc)
         ^ "\tassert_closure(rax)\n"
-        ^ (Printf.sprintf "\tjne %s\n" label_error_type)
-        ^"\tpush rax \n"
-        ^"\tcall rax\n"
-        ^"add rsp,8*1\n"
+        (*^ (Printf.sprintf "\tjne %s\n" label_error_type)*)
+        ^"\tpush SOB_CLOSURE_ENV(rax) \n"
+        ^"\tcall SOB_CLOSURE_CODE(rax)\n"
+        (*^"\tadd rsp,8*1\n"
         ^"\tpop rbx\n"
         ^"\tlea rsp, [rsp + 8 * rbx]\n"
         ^";\tshl rbx, 3\n"
         ^";\tadd rsp, rbx\n"
-        ^(Printf.sprintf "\t%s:\n" label_error_type)
+        ^(Printf.sprintf "\t%s:\n" label_error_type)*)
         (*lev's end*)
       | ScmApplic' (proc, args, Tail_Call) -> 
         (run params env (ScmApplic'(proc, args, Non_Tail_Call)))
