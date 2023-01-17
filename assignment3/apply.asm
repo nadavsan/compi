@@ -2,7 +2,7 @@ L_code_ptr_bin_apply:
         enter 0, 0
         ;finding the list's length
         xor rcx, rcx ;0
-        mov rax, qword [rbp + 8 * 0] ;rax = num_of_args
+        mov rax, qword [rbp + 8 * 3] ;rax = num_of_args
         mov rax, qword [rbp + 8 * rax] ;TODO: rax = address of pair list
         mov rbx ,SOB_PAIR_CAR(rax) ;node val
         my_loop1:
@@ -13,6 +13,8 @@ L_code_ptr_bin_apply:
                 mov rax, qword [SOB_PAIR_CDR(rax)] ;next node
                 mov rbx ,SOB_PAIR_CAR(rax) ;next val
         my_loop_end1:
+
+        ;TODO: ecx = 0 ?
 
         ;make values in the opposite order:
         ;1.pushing all argument one more time in the right order

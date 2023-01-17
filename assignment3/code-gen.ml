@@ -415,6 +415,12 @@ module Code_Generation : CODE_GENERATION= struct
     make_make_label ".L_tc_recycle_frame_done";;
   let make_error_type =
     make_make_label ".L_error_incorrect_type";;
+  let make_fix_stack_label =
+    make_make_label ".L_fix_stack_label";;
+  let make_label_loop_fix_stuck =
+    make_make_label ".L_loop_fix_stuck";;
+  let make_label_loop_fix_stuck_end =
+    make_make_label ".L_loop_fix_stuck_end";;
 
   let code_gen exprs' =
     let consts = make_constants_table exprs' in
@@ -429,7 +435,8 @@ module Code_Generation : CODE_GENERATION= struct
            "\tmov rax, qword [%s]\n"
            label)
       | ScmVarGet' (Var' (v, Param minor)) -> 
-        (Printf.sprintf "\tmov rax, qword [rbp + 8 * (4 + %d)]\n" minor)
+        (Printf.sprintf "\tmov rax ,qword[rbp + 8 * 2]\n
+        \tmov rax ,qword[rbp + 8 * %d]\n" minor)
       | ScmVarGet' (Var' (v, Bound (major, minor))) ->
          (Printf.sprintf "\tmov rax, qword [rbp + 8 * 2]\n
                           \tmov rax, qword[rax + 8 * %d]\n
@@ -742,24 +749,45 @@ module Code_Generation : CODE_GENERATION= struct
         ^(Printf.sprintf "\t%s:\n" label_error_type)*)
         (*lev's end*)
       | ScmApplic' (proc, args, Tail_Call) -> 
-        (run params env (ScmApplic'(proc, args, Non_Tail_Call)))
-        (*let arguments = (runs params env args) 
-        and num = List.length(args) 
-        and label_error_type = make_error_type()
-        and label_fix_stuck = make_fix_stack_label()
-        in
-        (Printf.sprintf"\t %s\n" arguments)
-        ^ (Printf.sprintf"npush %d\n"num)
-        ^ (run params env proc)
-        ^ "\tassert_closure(rax)"
-        ^ (Printf.sprintf "\tjne %s\n" label_error_type)
-        ^(Printf.sprintf "\tpush rax \n")
-        ^"\tpush qword,[rbp + 8 * 1]\n
-        \tpush [rbp]\n
-        \tadd rbx ,8*1\n"
-        ^ (Printf.sprintf "\tjmp %s \n",label_fix_stuck)
-        ^ "\tpop rbp\n
-        \tjmp rax \n"*)
+       (* (run params env (ScmApplic'(proc, args, Non_Tail_Call)))*)
+      
+       let arguments = (runs params env args) 
+       and num = List.length(args)
+       and label_fix_stuck = make_fix_stack_label()
+       and label_loop_fix_stuck = make_label_loop_fix_stuck()
+       and label_loop_fix_stuck_end = make_label_loop_fix_stuck_end()
+       in
+       (Printf.sprintf"\t %s\n" arguments)
+       ^ (Printf.sprintf"npush %d\n"num)
+       ^ (run params env proc)
+       ^ "\tassert_closure(rax)"
+       ^"\tpush rax \n"
+       ^"\tpush qword,[rbp + 8]\n"
+       ^"\tpush qword[rbp]\n"
+       ^"\tadd rbx ,8*1\n"
+       ^(Printf.sprintf"\t %s:\n" label_fix_stuck)
+       ^"\tmov rdx, qword[rbp+8*3]\n"
+       ^"\tadd rdx, 3\n"
+       ^"\tshl rdx, 3\n"
+       ^"\tmov rdi, rbp\n"
+       ^"\tadd rdi, rdx\n"
+       ^"\tmov r8, qword[rbp]\n"
+       ^"\tmov rcx, rbp\n"
+       ^"\tsub rcx, 8\n"
+       ^(Printf.sprintf"\t %s:\n" label_loop_fix_stuck)
+       ^"\tcmp rsp, rcx\n"
+       ^(Printf.sprintf"ja %s\n " label_loop_fix_stuck_end)
+       ^"\tmov rbx, qword[rcx]\n"
+       ^"\t mov qword[rdi], rbx\n"
+       ^"\tsub rdi, 8\n"
+       ^"\tsub rcx, 8\n"
+       ^(Printf.sprintf"jmp %s\n "label_loop_fix_stuck)
+       ^(Printf.sprintf"\t %s:\n" label_loop_fix_stuck_end)
+       ^"\tadd rdi, 8\n"
+       ^"\t mov rsp, rdi\n"
+       ^"\tmov rbp, r8\n"
+       ^ "\tpop rbp\n"
+       ^"\tjmp rax \n"
     and runs params env exprs' =
       List.map
         (fun expr' ->
