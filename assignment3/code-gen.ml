@@ -750,8 +750,7 @@ module Code_Generation : CODE_GENERATION= struct
         (*lev's end*)
       | ScmApplic' (proc, args, Tail_Call) -> 
        (* (run params env (ScmApplic'(proc, args, Non_Tail_Call)))*)
-      
-       let arguments = (runs params env args) 
+       let arguments = List.fold_right (fun cur acc -> acc^(run params env cur)^"\tpush rax\n") args "" 
        and num = List.length(args)
        and label_fix_stuck = make_fix_stack_label()
        and label_loop_fix_stuck = make_label_loop_fix_stuck()
