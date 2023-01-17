@@ -427,17 +427,11 @@ module Code_Generation : CODE_GENERATION= struct
          let label = search_free_var_table v free_vars in
          (Printf.sprintf
            "\tmov rax, qword [%s]\n"
-<<<<<<< HEAD
-           label)
-      | ScmVarGet' (Var' (v, Param minor)) -> 
-        (Printf.sprintf "\tmov rax, qword [rbp + 8 * (4 + %d)]\n" minor)
-=======
            label
       | ScmVarGet' (Var' (v, Param minor)) -> 
         (Printf.sprintf "\tmov rax ,qword[rbp + 8 * 2]\n
         \tmov rax ,qword[rbp + 8 * %d]\n
         \tmov rax ,qword[rbp + 8 * %d]\n" major minor)
->>>>>>> 534fc4b (not changed)
       | ScmVarGet' (Var' (v, Bound (major, minor))) ->
          (Printf.sprintf "\tmov rax, qword [rbp + 8 * 2]\n
                           \tmov rax, qword[rax + 8 * %d]\n
