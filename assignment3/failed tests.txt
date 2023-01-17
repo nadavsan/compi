@@ -1,0 +1,9 @@
+{test = "(begin)"; expected = ""};
+ 
+{test = "'(a b c)"; expected = "(a b c)"};
+ 
+{test = "'(a b . c)"; expected = "(a b . c)"};
+
+{test = "'(a b . (c))"; expected = "(a b c)"};
+
+{test = "''(a . ((b) . (c)))"; expected = "(quote (a (b) c))"};
