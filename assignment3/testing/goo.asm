@@ -80,38 +80,8 @@ L_constants:
 	db T_boolean_false
 	db T_boolean_true
 	db T_char, 0x00	; #\x0
-	db T_string	; "quote"
-	dq 5
-	db 0x71, 0x75, 0x6F, 0x74, 0x65
-	db T_symbol	; quote
-	dq L_constants + 6
-	db T_string	; "a"
-	dq 1
-	db 0x61
-	db T_symbol	; a
-	dq L_constants + 29
-	db T_string	; "b"
-	dq 1
-	db 0x62
-	db T_symbol	; b
-	dq L_constants + 48
-	db T_pair	; (b)
-	dq L_constants + 58, L_constants + 1
-	db T_string	; "c"
-	dq 1
-	db 0x63
-	db T_symbol	; c
-	dq L_constants + 84
-	db T_pair	; (c)
-	dq L_constants + 94, L_constants + 1
-	db T_pair	; ((b) c)
-	dq L_constants + 67, L_constants + 103
-	db T_pair	; (a (b) c)
-	dq L_constants + 39, L_constants + 120
-	db T_pair	; ((a (b) c))
-	dq L_constants + 137, L_constants + 1
-	db T_pair	; '(a (b) c)
-	dq L_constants + 20, L_constants + 154
+	db T_rational	; 1
+	dq 1, 1
 
 section .bss
 free_var_0:	; location of null?
@@ -513,7 +483,61 @@ main:
 	mov rsi, L_code_ptr_eq
 	call bind_primitive
 
-	mov rax,171+L_constants
+	mov rax,6+L_constants
+	push rax
+	push 1
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 0	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0001:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 1
+	je .L_lambda_simple_env_end_0001
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0001
+.L_lambda_simple_env_end_0001:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0001:	; copy params
+	cmp rsi, 0
+	je .L_lambda_simple_params_end_0001
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0001
+.L_lambda_simple_params_end_0001:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0001
+	jmp .L_lambda_simple_end_0001
+.L_lambda_simple_code_0001:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0001
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0001:
+	enter 0, 0
+	mov rax, qword [rbp + 8 * (4 + 0)]
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0001:	; new closure is in rax
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
 
 	mov rdi, rax
 	call print_sexpr_if_not_void
