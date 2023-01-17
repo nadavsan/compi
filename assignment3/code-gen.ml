@@ -584,7 +584,7 @@ module Code_Generation : CODE_GENERATION= struct
          ^ "\tleave\n"
          ^ (Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params'))
          ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
-      | ScmLambda' (params', Opt opt, body) -> (*raise X_not_yet_implemented*)
+      | ScmLambda' (params', Opt opt, body) -> (*raise X_not_yet_implemented*) (*TODO*)
         let args_count = List.length params' in
         let label_loop_env = make_lambda_opt_loop_env ()
         and label_loop_env_end = make_lambda_opt_loop_env_end ()
@@ -749,7 +749,7 @@ module Code_Generation : CODE_GENERATION= struct
         ^(Printf.sprintf "\t%s:\n" label_error_type)*)
         (*lev's end*)
       | ScmApplic' (proc, args, Tail_Call) -> 
-       (* (run params env (ScmApplic'(proc, args, Non_Tail_Call)))*)
+       (* (*(run params env (ScmApplic'(proc, args, Non_Tail_Call)))*)*)
        let arguments = List.fold_right (fun cur acc -> acc^(run params env cur)^"\tpush rax\n") args "" 
        and num = List.length(args)
        and label_fix_stuck = make_fix_stack_label()
