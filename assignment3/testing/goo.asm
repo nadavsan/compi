@@ -80,20 +80,14 @@ L_constants:
 	db T_boolean_false
 	db T_boolean_true
 	db T_char, 0x00	; #\x0
-	db T_string	; "a"
-	dq 1
-	db 0x61
-	db T_symbol	; a
-	dq L_constants + 6
-	db T_string	; "b"
-	dq 1
-	db 0x62
-	db T_symbol	; b
-	dq L_constants + 25
-	db T_pair	; (b)
-	dq L_constants + 35, L_constants + 1
-	db T_pair	; (a b)
-	dq L_constants + 16, L_constants + 44
+	db T_rational	; 5
+	dq 5, 1
+	db T_rational	; 7
+	dq 7, 1
+	db T_pair	; (7)
+	dq L_constants + 23, L_constants + 1
+	db T_pair	; (5 7)
+	dq L_constants + 6, L_constants + 40
 
 section .bss
 free_var_0:	; location of null?
@@ -495,7 +489,7 @@ main:
 	mov rsi, L_code_ptr_eq
 	call bind_primitive
 
-	mov rax,61+L_constants
+	mov rax,57+L_constants
 
 	mov rdi, rax
 	call print_sexpr_if_not_void

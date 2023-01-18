@@ -679,7 +679,7 @@ module Tag_Parser : TAG_PARSER = struct
 
   let rec tag_parse sexpr =
     match sexpr with
-    | ScmVoid | ScmBoolean _ | ScmChar _ | ScmString _ | ScmNumber _ ->
+    |ScmVector _ | ScmVoid | ScmBoolean _ | ScmChar _ | ScmString _ | ScmNumber _ ->
        ScmConst sexpr
     | ScmPair (ScmSymbol "quote", ScmPair (sexpr, ScmNil)) ->
        ScmConst sexpr
