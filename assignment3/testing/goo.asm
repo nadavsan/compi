@@ -80,6 +80,7 @@ L_constants:
 	db T_boolean_false
 	db T_boolean_true
 	db T_char, 0x00	; #\x0
+<<<<<<< HEAD
 	db T_rational	; 5
 	dq 5, 1
 	db T_rational	; 7
@@ -88,6 +89,12 @@ L_constants:
 	dq L_constants + 23, L_constants + 1
 	db T_pair	; (5 7)
 	dq L_constants + 6, L_constants + 40
+=======
+	db T_rational	; 1
+	dq 1, 1
+	db T_rational	; 2
+	dq 2, 1
+>>>>>>> 76f50b1 (changed remove duplicates and collect constants)
 
 section .bss
 free_var_0:	; location of null?
@@ -489,7 +496,17 @@ main:
 	mov rsi, L_code_ptr_eq
 	call bind_primitive
 
+<<<<<<< HEAD
 	mov rax,57+L_constants
+=======
+	mov rax,23+L_constants
+	push rax
+	push 1
+	mov rax,6+L_constants
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+>>>>>>> 76f50b1 (changed remove duplicates and collect constants)
 
 	mov rdi, rax
 	call print_sexpr_if_not_void
