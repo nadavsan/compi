@@ -578,7 +578,7 @@ L_code_ptr_bin_apply:
         assert_pair(rax)
         mov rbx ,SOB_PAIR_CAR(rax) ;node val
         my_loop1:
-                cmp rbx, sob_nil ;if nill
+                cmp rax, sob_nil ;if nill
                 je my_loop_end1 ;jmp end
                 inc rcx 
                 push rbx ;insrting val to stack
@@ -622,7 +622,7 @@ L_code_ptr_bin_apply:
                 jmp my_loop3
         my_loop_end3:
         lea rsp, [rsp + 8 * rcx];pop all 1st time pushed args
-        add rsp, 8 * 3 ; pop old-rbp, return-address, le-ap
+        add rsp, 8 * 4 ; pop old-rbp, return-address, le-ap 
         push rcx ;push number of arguments
         push r10 ; push lex-env
         push rdi ; push old ret-add

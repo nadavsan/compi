@@ -84,18 +84,10 @@ L_constants:
 	dq 20, 1
 	db T_rational	; 10
 	dq 10, 1
-	db T_rational	; 5
-	dq 5, 1
-	db T_rational	; 1
-	dq 1, 1
-	db T_pair	; (1)
-	dq L_constants + 57, L_constants + 1
-	db T_pair	; (5 1)
-	dq L_constants + 40, L_constants + 74
-	db T_pair	; (10 5 1)
-	dq L_constants + 23, L_constants + 91
-	db T_pair	; (20 10 5 1)
-	dq L_constants + 6, L_constants + 108
+	db T_pair	; (10)
+	dq L_constants + 23, L_constants + 1
+	db T_pair	; (20 10)
+	dq L_constants + 6, L_constants + 40
 
 section .bss
 free_var_0:	; location of null?
@@ -497,13 +489,13 @@ main:
 	mov rsi, L_code_ptr_eq
 	call bind_primitive
 
-	mov rax,L_constants + 125
+	mov rax,L_constants + 57
 	push rax
 	mov rax, qword [free_var_35]
 	push rax
 	push 2
 	mov rax, qword [free_var_29]
-        .goo:
+        .goo:   
 	assert_closure(rax)
 	push SOB_CLOSURE_ENV(rax) 
 	call SOB_CLOSURE_CODE(rax)
@@ -1090,7 +1082,7 @@ L_code_ptr_bin_apply:
         assert_pair(rax)
         mov rbx ,SOB_PAIR_CAR(rax) ;node val
         my_loop1:
-                cmp rbx, sob_nil ;if nill
+                cmp rax, sob_nil ;if nill
                 je my_loop_end1 ;jmp end
                 inc rcx 
                 push rbx ;insrting val to stack
@@ -1134,7 +1126,7 @@ L_code_ptr_bin_apply:
                 jmp my_loop3
         my_loop_end3:
         lea rsp, [rsp + 8 * rcx];pop all 1st time pushed args
-        add rsp, 8 * 3 ; pop old-rbp, return-address, le-ap
+        add rsp, 8 * 4 ; pop old-rbp, return-address, le-ap 
         push rcx ;push number of arguments
         push r10 ; push lex-env
         push rdi ; push old ret-add
