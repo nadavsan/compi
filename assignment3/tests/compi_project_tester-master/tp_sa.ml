@@ -679,7 +679,7 @@ module Tag_Parser : TAG_PARSER = struct
 
   let rec tag_parse sexpr =
     match sexpr with
-    | ScmVoid | ScmBoolean _ | ScmChar _ | ScmString _ | ScmNumber _ ->
+    |ScmVector _ | ScmVoid | ScmBoolean _ | ScmChar _ | ScmString _ | ScmNumber _ ->
        ScmConst sexpr
     | ScmPair (ScmSymbol "quote", ScmPair (sexpr, ScmNil)) ->
        ScmConst sexpr
@@ -998,6 +998,7 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
       | ScmSeq exprs -> ScmSeq'(List.map (fun arg -> run arg params env) exprs)
       | ScmOr exprs -> ScmOr'(List.map (fun arg -> run arg params env) exprs)
       (* this code does not [yet?] support nested define-expressions *)
+      | ScmVarSet(Var v, expr) -> ScmVarSet' (tag_lexical_address_for_var v params env, run expr params env)
       | ScmVarDef(Var v, expr) -> ScmVarDef' (tag_lexical_address_for_var v params env, run expr params env)
       | ScmLambda (params', Simple, expr) -> ScmLambda' (params', Simple, (run expr params' (params::env)) )
       | ScmLambda (params', Opt opt, expr) -> ScmLambda' (params', Opt opt, run expr (params'@[opt]) ((params@[opt])::env))
@@ -1121,9 +1122,9 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
         (Var' (n2, Param _), _)) :: rest ->
         run rest
       | ((Var' (n1, Param _), _),
-        (Var' (n2, Bound _), _)) :: rest -> true
+         (Var' (n2, Bound _), _)) :: _
       | ((Var' (n1, Bound _), _),
-        (Var' (n2, Param _), _)) :: rest -> true
+         (Var' (n2, Param _), _)) :: _ -> true
       | ((Var' (n1, Bound _), env1),
         (Var' (n2, Bound _), env2)) :: rest ->
         (not ((find_var_rib name env1) == (find_var_rib name env2)))
@@ -1235,10 +1236,13 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
     | ScmApplic' (proc, args, app_kind) ->
        ScmApplic' (auto_box proc, List.map auto_box args, app_kind);;
 
+       (* TODO: get out of comment *)
   let semantics expr =
     auto_box
-      (annotate_tail_calls
-         (annotate_lexical_address expr));;
+      (* (annotate_tail_calls *)
+         (annotate_lexical_address expr)
+         (* ) *)
+        ;;
 
 end;; (* end of module Semantic_Analysis *)
 
