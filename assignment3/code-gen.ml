@@ -21,7 +21,7 @@ module type CODE_GENERATION =
     val compile_scheme_file : string -> string -> unit
   end;;
 
-module Code_Generation : CODE_GENERATION= struct
+module Code_Generation (*: CODE_GENERATION*)= struct
 
   (* areas that raise this exception are NOT for the
    * final project! please leave these unimplemented,
@@ -54,31 +54,57 @@ module Code_Generation : CODE_GENERATION= struct
     | [] -> []
     | s -> run (s, n, (fun s -> s));;
 
-  let remove_duplicate obj list = match list with (*(val::vals) obj = match obj with*)
+  (* let remove_duplicate obj list = match list with (*(val::vals) obj = match obj with*)
     | [] -> []
     | list -> List.filter (fun x -> x <> obj) list;;
 
   let rec remove_duplicates = function
     | [] -> []
-    | (curr::rest) -> (curr::(remove_duplicates(remove_duplicate curr rest)));;
+    | (curr::rest) -> (curr::(remove_duplicates(remove_duplicate curr rest)));; *)
 
+    let rec remove_duplicates list = 
+      match list with 
+      | [] -> [] 
+      | expr' :: exprs' -> 
+        let new_list = List.filter 
+                    (fun x -> x <> expr') 
+                    exprs' in
+        expr' :: (remove_duplicates new_list)
+      in remove_duplicates;;
+
+
+(* TODO: Delete here: *)
+let rec search_constant_address key = function
+  | [] -> 
+    raise (X_this_should_not_happen "error")
+  | (curr :: next) -> 
+  match curr with
+    | (k, i, r) -> 
+      if (k=key) 
+  then i 
+  else (search_constant_address key next);;
+(* end *)
 
   let collect_constants =
     let rec run = function
-      |ScmVarGet' _ | ScmBox' _ | ScmBoxGet' _ -> []
-      | ScmConst' sexpr -> [sexpr]
-      | ScmIf' (test, dit, dif) -> (run test)@(run dit)@(run dif)
-      | ScmSeq' es' -> runs es'
-      | ScmOr' es' -> runs es'
-      | ScmVarSet'(_, expr') -> run expr'
-      | ScmVarDef'(_, expr') -> run expr'
-      | ScmBoxSet'(_, expr') -> run expr'
-      | ScmLambda' (_, _, expr') -> run expr';
-      | ScmApplic' (proc', args', _) ->
-                 (run proc') @ (runs args')
-    and runs exprs' = 
+      | [] -> []
+      | (ScmVarGet' _) :: rest -> run rest
+      | (ScmBox' _):: rest -> run rest
+      | (ScmBoxGet' _) :: rest -> run rest
+      | (ScmConst' sexpr) ::rest -> sexpr::(run rest)
+      | (ScmIf' (test, dit, dif))::(rest) -> (run [test])@(run [dit])@(run [dif])@(run rest)
+      | (ScmSeq' es') :: rest -> (run es')@(run rest)
+      | (ScmOr' es') :: rest -> (run es')@(run rest)
+      | (ScmVarSet'(_, expr')) :: rest -> (run [expr'])@(run rest)
+      | (ScmVarDef'(_, expr')) :: rest -> (run [expr'])@(run rest)
+      | (ScmBoxSet'(_, expr')) :: rest -> (run [expr'])@(run rest)
+      | (ScmLambda' (_, _, expr')) :: rest -> (run [expr'])@(run rest)
+      | (ScmApplic' (proc', args', _) ) :: rest ->
+                 (run [proc']) @ (run args')@(run rest)
+      in run;;
+    (* and runs exprs' = 
       List.fold_left (fun s expr' -> s@(run expr')) [] exprs'
-    in runs ;;
+    in runs ;; *)
     
 
   let add_sub_constants =
@@ -111,8 +137,8 @@ module Code_Generation : CODE_GENERATION= struct
         | _ -> raise (X_syntax "address_from_sexpr")
       | _ -> raise (X_syntax "address_from_sexpr");;
 
-  let search_constant_address sexpr table=
-    address_from_sexpr sexpr table;; 
+  (* let search_constant_address sexpr table=
+    address_from_sexpr sexpr table;;  *)
      
 
   let const_repr sexpr loc table = match sexpr with
@@ -295,6 +321,7 @@ module Code_Generation : CODE_GENERATION= struct
       ("eq?", "L_code_ptr_eq")
     ];;
 
+
   let collect_free_vars =
     let rec run = function
       | ScmConst' _ -> []
@@ -314,7 +341,7 @@ module Code_Generation : CODE_GENERATION= struct
       | ScmBoxSet' (Var' (v, Free), expr') -> (v)::(run expr')
       | ScmBoxSet' (_, expr') -> run expr'
       | ScmLambda' (_, _, expr') -> (run expr')
-      | ScmApplic' (expr', exprs', _) -> (run expr')@(runs exprs')
+      | ScmApplic' (expr', exprs', _) -> runs (expr' :: exprs')
     and runs exprs' =
       List.fold_left
         (fun vars expr' -> vars @ (run expr'))
@@ -812,8 +839,9 @@ module Code_Generation : CODE_GENERATION= struct
     code;;
 
   let compile_scheme_string file_out user =
-    let init = file_to_string "init.scm" in
-    let source_code = init ^ user in
+    (* TODO: get out of comment *)
+    (* let init = file_to_string "init.scm" in *)
+    let source_code = (*init ^*) user in
     let sexprs = (PC.star Reader.nt_sexpr source_code 0).found in
     let exprs = List.map Tag_Parser.tag_parse sexprs in
     let exprs' = List.map Semantic_Analysis.semantics exprs in
@@ -825,6 +853,13 @@ module Code_Generation : CODE_GENERATION= struct
     compile_scheme_string file_out (file_to_string file_in);;
 
 end;; (* end of Code_Generation struct *)
+(* TODO: delete here: *)
+open Code_Generation;;
+
+let show str = Semantic_Analysis.semantics
+(Tag_Parser.tag_parse (Reader.nt_sexpr str 0).found);;
+
+(* end of delete *)
 
 (* end-of-input *)
 
