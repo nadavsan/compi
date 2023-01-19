@@ -56,7 +56,7 @@ module Code_Generation : CODE_GENERATION= struct
 
   let remove_duplicate obj list = match list with (*(val::vals) obj = match obj with*)
     | [] -> []
-    | list -> List.filter (fun x -> x != obj) list;;
+    | list -> List.filter (fun x -> x <> obj) list;;
 
   let rec remove_duplicates = function
     | [] -> []

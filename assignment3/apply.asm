@@ -19,7 +19,7 @@ L_code_ptr_bin_apply:
         ;make values in the opposite order:
         ;1.pushing all argument one more time in the right order
         mov rsi, rcx ;count-up
-        mov rcx, 1 
+        mov rcx, 0 
         mov rdx, rsp ;marking the begining of the second pushing
         my_loop2:
                 cmp rcx, rsi ; if rcx = n
