@@ -495,7 +495,7 @@ main:
 	push rax
 	push 2
 	mov rax, qword [free_var_29]
-        .goo:   
+        .goo:
 	assert_closure(rax)
 	push SOB_CLOSURE_ENV(rax) 
 	call SOB_CLOSURE_CODE(rax)
@@ -1112,7 +1112,7 @@ L_code_ptr_bin_apply:
         shl rdx, 3 ;nubmer of *bytes* we need to skip
         mov rsi, qword [rbp + 8 * 0] ; save old rbp
         mov rdi, qword [rbp + 8 * 1] ; save return address
-        mov r10, qword [rbp + 8 * 2] ; save lex-env
+        ;mov r10, qword [rbp + 8 * 2] ; save lex-env
         mov r8, qword [rbp + 8 * 4]  ; save function to apply
         mov rcx, 0
         my_loop3:
@@ -1128,10 +1128,10 @@ L_code_ptr_bin_apply:
         lea rsp, [rsp + 8 * rcx];pop all 1st time pushed args
         add rsp, 8 * 4 ; pop old-rbp, return-address, le-ap 
         push rcx ;push number of arguments
-        push r10 ; push lex-env
+        push SOB_CLOSURE_ENV(r8) ; push lex-env
         push rdi ; push old ret-add
         mov rbp, rsi ;rbp = old-rbp
-        mov rsp, rbp; the part of LEAVE we need
+        ;mov rsp, rbp; the part of LEAVE we need
         jmp r8 ; fun to apply
 	
 L_code_ptr_is_null:
