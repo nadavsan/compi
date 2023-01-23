@@ -84,10 +84,18 @@ L_constants:
 	dq 20, 1
 	db T_rational	; 10
 	dq 10, 1
-	db T_pair	; (10)
-	dq L_constants + 23, L_constants + 1
-	db T_pair	; (20 10)
-	dq L_constants + 6, L_constants + 40
+	db T_rational	; 5
+	dq 5, 1
+	db T_rational	; 1
+	dq 1, 1
+	db T_pair	; (1)
+	dq L_constants + 57, L_constants + 1
+	db T_pair	; (5 1)
+	dq L_constants + 40, L_constants + 74
+	db T_pair	; (10 5 1)
+	dq L_constants + 23, L_constants + 91
+	db T_pair	; (20 10 5 1)
+	dq L_constants + 6, L_constants + 108
 
 section .bss
 free_var_0:	; location of null?
@@ -489,7 +497,7 @@ main:
 	mov rsi, L_code_ptr_eq
 	call bind_primitive
 
-	mov rax,L_constants + 57
+	mov rax,L_constants + 125
 	push rax
 	mov rax, qword [free_var_35]
 	push rax
@@ -1109,8 +1117,7 @@ L_code_ptr_bin_apply:
         my_loop_end2:
         int3
         ;2.overwriting element above by element below but in correct order
-        lea rdx, [8 * (rbx + 6)] ;nubmer of *qwords* we need to skip
-        ;shl rdx, 3 ;nubmer of *bytes* we need to skip
+        lea rdx, [8 * (rbx + 6)] ;nubmer of *bytes* we need to skip
         mov rsi, qword [rbp + 8 * 0] ; save old rbp
         mov rdi, qword [rbp + 8 * 1] ; save return address
         ;mov r10, qword [rbp + 8 * 2] ; save lex-env
@@ -1128,13 +1135,16 @@ L_code_ptr_bin_apply:
                 jmp my_loop3
         my_loop_end3:
         int3
+        cmp ecx, 6
+        jg seven_or_more
         lea rsp, [rsp + 8 * rcx];pop all 1st time pushed args
-        cmp ecx, 1
-        jg two_or_more
-        add rsp, 8 * 5 ; pop old-rbp, return-address, le-ap 
+        mov r10, rcx
+        neg r10
+        add r10, 6
+        lea rsp, [rsp + 8 * r10] ; pop rest of old frame 
         jmp continu
-        two_or_more:
-        add rsp, 8 * 4 ; pop old-rbp, return-address, le-ap 
+        seven_or_more:
+        lea rsp, [rsp + 8 * 6] ; pop rest of 1st time pushed args
         continu:
         push rcx ;push number of arguments
         push SOB_CLOSURE_ENV(r8) ; push lex-env

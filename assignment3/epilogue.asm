@@ -606,8 +606,7 @@ L_code_ptr_bin_apply:
         my_loop_end2:
         int3
         ;2.overwriting element above by element below but in correct order
-        lea rdx, [8 * (rbx + 6)] ;nubmer of *qwords* we need to skip
-        ;shl rdx, 3 ;nubmer of *bytes* we need to skip
+        lea rdx, [8 * (rbx + 6)] ;nubmer of *bytes* we need to skip
         mov rsi, qword [rbp + 8 * 0] ; save old rbp
         mov rdi, qword [rbp + 8 * 1] ; save return address
         ;mov r10, qword [rbp + 8 * 2] ; save lex-env
@@ -625,13 +624,16 @@ L_code_ptr_bin_apply:
                 jmp my_loop3
         my_loop_end3:
         int3
+        cmp ecx, 6
+        jg seven_or_more
         lea rsp, [rsp + 8 * rcx];pop all 1st time pushed args
-        cmp ecx, 1
-        jg two_or_more
-        add rsp, 8 * 5 ; pop old-rbp, return-address, le-ap 
+        mov r10, rcx
+        neg r10
+        add r10, 6
+        lea rsp, [rsp + 8 * r10] ; pop rest of old frame 
         jmp continu
-        two_or_more:
-        add rsp, 8 * 4 ; pop old-rbp, return-address, le-ap 
+        seven_or_more:
+        lea rsp, [rsp + 8 * 6] ; pop rest of 1st time pushed args
         continu:
         push rcx ;push number of arguments
         push SOB_CLOSURE_ENV(r8) ; push lex-env
