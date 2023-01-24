@@ -573,19 +573,22 @@ bind_primitive:
 L_code_ptr_bin_apply:
         enter 0, 0
         ;finding the list's length
+        
         xor rcx, rcx ;0
-        mov rax, qword [rbp + 8 * 3] ;rax = num_of_args
-        mov rax, qword [rbp + 8 * rax] ;TODO: rax = address of pair list
+        mov rax, qword [rbp + 8 * 5] ;rax = address of scmpair list
+        assert_pair(rax)
         mov rbx ,SOB_PAIR_CAR(rax) ;node val
         my_loop1:
-                cmp rbx, sob_nil ;if nill
+                cmp rax, sob_nil ;if nill
                 je my_loop_end1 ;jmp end
                 inc rcx 
                 push rbx ;insrting val to stack
+                assert_pair(rax)
                 mov rax, SOB_PAIR_CDR(rax) ;next node
                 mov rbx ,SOB_PAIR_CAR(rax) ;next val
+                jmp my_loop1
         my_loop_end1:
-
+        
         ;TODO: ecx = 0 ?
 
         ;make values in the opposite order:
@@ -599,10 +602,11 @@ L_code_ptr_bin_apply:
                 mov rax, qword [rdx + 8 * rcx] ;else: rax = next arg in correct order
                 push rax
                 inc rcx
+                jmp my_loop2
         my_loop_end2:
+        
         ;2.overwriting element above by element below but in correct order
-        lea rdx, [rbx + 6] ;nubmer of *qwords* we need to skip
-        shl rdx, 3 ;nubmer of *bytes* we need to skip
+        lea rdx, [8 * (rbx + 6)] ;nubmer of *bytes* we need to skip
         mov rsi, qword [rbp + 8 * 0] ; save old rbp
         mov rdi, qword [rbp + 8 * 1] ; save return address
         mov r8, qword [rbp + 8 * 4]  ; save function to apply
@@ -615,14 +619,25 @@ L_code_ptr_bin_apply:
                 mov [r9], rax ;over writing arg in false order by arg with correct order
                 add rsp, 8 ;pop arg we used
                 inc rcx 
+                xor rax, rax
+                jmp my_loop3
         my_loop_end3:
+        
+        cmp rcx, 6
+        jg seven_or_more
         lea rsp, [rsp + 8 * rcx];pop all 1st time pushed args
-        add rsp, 8 * 3 ; pop old-rbp, return-address, le-ap
+        neg rbx 
+        add rbx, 6      ;sub 6 from num_of_args
+        lea rsp, [rsp + 8 * rbx] ; pop rest of old frame 
+        jmp continu
+        seven_or_more:
+        lea rsp, [rsp + 8 * 6] ; pop rest of 1st time pushed args
+        continu:
         push rcx ;push number of arguments
+        push SOB_CLOSURE_ENV(r8) ; push lex-env
         push rdi ; push old ret-add
         mov rbp, rsi ;rbp = old-rbp
-        mov rsp, rbp; the part of LEAVE we need
-        jmp r8 ; fun to apply
+        jmp SOB_CLOSURE_CODE(r8) ; fun to apply
 	
 L_code_ptr_is_null:
         ENTER

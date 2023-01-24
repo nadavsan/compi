@@ -80,22 +80,10 @@ L_constants:
 	db T_boolean_false
 	db T_boolean_true
 	db T_char, 0x00	; #\x0
-	db T_rational	; 20
-	dq 20, 1
-	db T_rational	; 10
-	dq 10, 1
-	db T_rational	; 5
-	dq 5, 1
-	db T_rational	; 1
-	dq 1, 1
-	db T_pair	; (1)
-	dq L_constants + 57, L_constants + 1
-	db T_pair	; (5 1)
-	dq L_constants + 40, L_constants + 74
-	db T_pair	; (10 5 1)
-	dq L_constants + 23, L_constants + 91
-	db T_pair	; (20 10 5 1)
-	dq L_constants + 6, L_constants + 108
+	db T_pair	; (#f)
+	dq L_constants + 2, L_constants + 1
+	db T_pair	; (#t #f)
+	dq L_constants + 3, L_constants + 6
 
 section .bss
 free_var_0:	; location of null?
@@ -497,9 +485,9 @@ main:
 	mov rsi, L_code_ptr_eq
 	call bind_primitive
 
-	mov rax,L_constants + 125
+	mov rax,L_constants + 23
 	push rax
-	mov rax, qword [free_var_35]
+	mov rax, qword [free_var_13]
 	push rax
 	push 2
 	mov rax, qword [free_var_29]
@@ -1084,7 +1072,7 @@ bind_primitive:
 L_code_ptr_bin_apply:
         enter 0, 0
         ;finding the list's length
-        int3
+        
         xor rcx, rcx ;0
         mov rax, qword [rbp + 8 * 5] ;rax = address of scmpair list
         assert_pair(rax)
@@ -1099,7 +1087,7 @@ L_code_ptr_bin_apply:
                 mov rbx ,SOB_PAIR_CAR(rax) ;next val
                 jmp my_loop1
         my_loop_end1:
-        int3
+        
         ;TODO: ecx = 0 ?
 
         ;make values in the opposite order:
@@ -1115,12 +1103,11 @@ L_code_ptr_bin_apply:
                 inc rcx
                 jmp my_loop2
         my_loop_end2:
-        int3
+        
         ;2.overwriting element above by element below but in correct order
         lea rdx, [8 * (rbx + 6)] ;nubmer of *bytes* we need to skip
         mov rsi, qword [rbp + 8 * 0] ; save old rbp
         mov rdi, qword [rbp + 8 * 1] ; save return address
-        ;mov r10, qword [rbp + 8 * 2] ; save lex-env
         mov r8, qword [rbp + 8 * 4]  ; save function to apply
         mov rcx, 0
         my_loop3:
@@ -1134,14 +1121,13 @@ L_code_ptr_bin_apply:
                 xor rax, rax
                 jmp my_loop3
         my_loop_end3:
-        int3
-        cmp ecx, 6
+        
+        cmp rcx, 6
         jg seven_or_more
         lea rsp, [rsp + 8 * rcx];pop all 1st time pushed args
-        mov r10, rcx
-        neg r10
-        add r10, 6
-        lea rsp, [rsp + 8 * r10] ; pop rest of old frame 
+        neg rbx 
+        add rbx, 6      ;sub 6 from num_of_args
+        lea rsp, [rsp + 8 * rbx] ; pop rest of old frame 
         jmp continu
         seven_or_more:
         lea rsp, [rsp + 8 * 6] ; pop rest of 1st time pushed args
@@ -1150,8 +1136,7 @@ L_code_ptr_bin_apply:
         push SOB_CLOSURE_ENV(r8) ; push lex-env
         push rdi ; push old ret-add
         mov rbp, rsi ;rbp = old-rbp
-        ;mov rsp, rbp; the part of LEAVE we need
-        jmp r8 ; fun to apply
+        jmp SOB_CLOSURE_CODE(r8) ; fun to apply
 	
 L_code_ptr_is_null:
         ENTER

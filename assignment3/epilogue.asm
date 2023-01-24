@@ -573,7 +573,7 @@ bind_primitive:
 L_code_ptr_bin_apply:
         enter 0, 0
         ;finding the list's length
-        int3
+        
         xor rcx, rcx ;0
         mov rax, qword [rbp + 8 * 5] ;rax = address of scmpair list
         assert_pair(rax)
@@ -588,7 +588,7 @@ L_code_ptr_bin_apply:
                 mov rbx ,SOB_PAIR_CAR(rax) ;next val
                 jmp my_loop1
         my_loop_end1:
-        int3
+        
         ;TODO: ecx = 0 ?
 
         ;make values in the opposite order:
@@ -604,12 +604,11 @@ L_code_ptr_bin_apply:
                 inc rcx
                 jmp my_loop2
         my_loop_end2:
-        int3
+        
         ;2.overwriting element above by element below but in correct order
         lea rdx, [8 * (rbx + 6)] ;nubmer of *bytes* we need to skip
         mov rsi, qword [rbp + 8 * 0] ; save old rbp
         mov rdi, qword [rbp + 8 * 1] ; save return address
-        ;mov r10, qword [rbp + 8 * 2] ; save lex-env
         mov r8, qword [rbp + 8 * 4]  ; save function to apply
         mov rcx, 0
         my_loop3:
@@ -623,14 +622,13 @@ L_code_ptr_bin_apply:
                 xor rax, rax
                 jmp my_loop3
         my_loop_end3:
-        int3
-        cmp ecx, 6
+        
+        cmp rcx, 6
         jg seven_or_more
         lea rsp, [rsp + 8 * rcx];pop all 1st time pushed args
-        mov r10, rcx
-        neg r10
-        add r10, 6
-        lea rsp, [rsp + 8 * r10] ; pop rest of old frame 
+        neg rbx 
+        add rbx, 6      ;sub 6 from num_of_args
+        lea rsp, [rsp + 8 * rbx] ; pop rest of old frame 
         jmp continu
         seven_or_more:
         lea rsp, [rsp + 8 * 6] ; pop rest of 1st time pushed args
@@ -639,8 +637,7 @@ L_code_ptr_bin_apply:
         push SOB_CLOSURE_ENV(r8) ; push lex-env
         push rdi ; push old ret-add
         mov rbp, rsi ;rbp = old-rbp
-        ;mov rsp, rbp; the part of LEAVE we need
-        jmp r8 ; fun to apply
+        jmp SOB_CLOSURE_CODE(r8) ; fun to apply
 	
 L_code_ptr_is_null:
         ENTER

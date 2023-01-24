@@ -80,10 +80,18 @@ L_constants:
 	db T_boolean_false
 	db T_boolean_true
 	db T_char, 0x00	; #\x0
-	db T_pair	; (#f)
-	dq L_constants + 2, L_constants + 1
-	db T_pair	; (#t #f)
-	dq L_constants + 3, L_constants + 6
+	db T_rational	; 1
+	dq 1, 1
+	db T_rational	; 2
+	dq 2, 1
+	db T_rational	; 3
+	dq 3, 1
+	db T_pair	; (3)
+	dq L_constants + 40, L_constants + 1
+	db T_pair	; (2 3)
+	dq L_constants + 23, L_constants + 57
+	db T_pair	; (1 2 3)
+	dq L_constants + 6, L_constants + 74
 
 section .bss
 free_var_0:	; location of null?
@@ -197,6 +205,10 @@ free_var_53:	; location of numerator
 free_var_54:	; location of denominator
 	resq 1
 free_var_55:	; location of eq?
+	resq 1
+free_var_56:	; location of apply
+	resq 1
+free_var_57:	; location of +
 	resq 1
 
 extern printf, fprintf, stdout, stderr, fwrite, exit, putchar
@@ -485,12 +497,12 @@ main:
 	mov rsi, L_code_ptr_eq
 	call bind_primitive
 
-	mov rax,L_constants + 23
+	mov rax,L_constants + 91
 	push rax
-	mov rax, qword [free_var_13]
+	mov rax, qword [free_var_57]
 	push rax
 	push 2
-	mov rax, qword [free_var_29]
+	mov rax, qword [free_var_56]
 	assert_closure(rax)
 	push SOB_CLOSURE_ENV(rax) 
 	call SOB_CLOSURE_CODE(rax)
@@ -1072,19 +1084,22 @@ bind_primitive:
 L_code_ptr_bin_apply:
         enter 0, 0
         ;finding the list's length
+        
         xor rcx, rcx ;0
-        mov rax, qword [rbp + 8 * 3] ;rax = num_of_args
-        mov rax, qword [rbp + 8 * rax] ;TODO: rax = address of pair list
+        mov rax, qword [rbp + 8 * 5] ;rax = address of scmpair list
+        assert_pair(rax)
         mov rbx ,SOB_PAIR_CAR(rax) ;node val
         my_loop1:
-                cmp rbx, sob_nil ;if nill
+                cmp rax, sob_nil ;if nill
                 je my_loop_end1 ;jmp end
                 inc rcx 
                 push rbx ;insrting val to stack
+                assert_pair(rax)
                 mov rax, SOB_PAIR_CDR(rax) ;next node
                 mov rbx ,SOB_PAIR_CAR(rax) ;next val
+                jmp my_loop1
         my_loop_end1:
-
+        
         ;TODO: ecx = 0 ?
 
         ;make values in the opposite order:
@@ -1098,10 +1113,11 @@ L_code_ptr_bin_apply:
                 mov rax, qword [rdx + 8 * rcx] ;else: rax = next arg in correct order
                 push rax
                 inc rcx
+                jmp my_loop2
         my_loop_end2:
+        
         ;2.overwriting element above by element below but in correct order
-        lea rdx, [rbx + 6] ;nubmer of *qwords* we need to skip
-        shl rdx, 3 ;nubmer of *bytes* we need to skip
+        lea rdx, [8 * (rbx + 6)] ;nubmer of *bytes* we need to skip
         mov rsi, qword [rbp + 8 * 0] ; save old rbp
         mov rdi, qword [rbp + 8 * 1] ; save return address
         mov r8, qword [rbp + 8 * 4]  ; save function to apply
@@ -1114,14 +1130,25 @@ L_code_ptr_bin_apply:
                 mov [r9], rax ;over writing arg in false order by arg with correct order
                 add rsp, 8 ;pop arg we used
                 inc rcx 
+                xor rax, rax
+                jmp my_loop3
         my_loop_end3:
+        
+        cmp rcx, 6
+        jg seven_or_more
         lea rsp, [rsp + 8 * rcx];pop all 1st time pushed args
-        add rsp, 8 * 3 ; pop old-rbp, return-address, le-ap
+        neg rbx 
+        add rbx, 6      ;sub 6 from num_of_args
+        lea rsp, [rsp + 8 * rbx] ; pop rest of old frame 
+        jmp continu
+        seven_or_more:
+        lea rsp, [rsp + 8 * 6] ; pop rest of 1st time pushed args
+        continu:
         push rcx ;push number of arguments
+        push SOB_CLOSURE_ENV(r8) ; push lex-env
         push rdi ; push old ret-add
         mov rbp, rsi ;rbp = old-rbp
-        mov rsp, rbp; the part of LEAVE we need
-        jmp r8 ; fun to apply
+        jmp SOB_CLOSURE_CODE(r8) ; fun to apply
 	
 L_code_ptr_is_null:
         ENTER
