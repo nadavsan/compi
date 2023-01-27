@@ -1239,9 +1239,9 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
        (* TODO: get out of comment *)
   let semantics expr =
     auto_box
-      (* (annotate_tail_calls TODO *)
+      (annotate_tail_calls (*TODO*)
          (annotate_lexical_address expr)
-         (* ) *)
+         )
         ;;
 
 end;; (* end of module Semantic_Analysis *)

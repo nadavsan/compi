@@ -82,16 +82,10 @@ L_constants:
 	db T_char, 0x00	; #\x0
 	db T_rational	; 1
 	dq 1, 1
-	db T_rational	; 2
-	dq 2, 1
-	db T_rational	; 3
-	dq 3, 1
-	db T_pair	; (3)
-	dq L_constants + 40, L_constants + 1
-	db T_pair	; (2 3)
-	dq L_constants + 23, L_constants + 57
-	db T_pair	; (1 2 3)
-	dq L_constants + 6, L_constants + 74
+	db T_rational	; 0
+	dq 0, 1
+	db T_rational	; 5
+	dq 5, 1
 
 section .bss
 free_var_0:	; location of null?
@@ -206,9 +200,11 @@ free_var_54:	; location of denominator
 	resq 1
 free_var_55:	; location of eq?
 	resq 1
-free_var_56:	; location of apply
+free_var_56:	; location of fact
 	resq 1
 free_var_57:	; location of +
+	resq 1
+free_var_58:	; location of -
 	resq 1
 
 extern printf, fprintf, stdout, stderr, fwrite, exit, putchar
@@ -497,11 +493,8736 @@ main:
 	mov rsi, L_code_ptr_eq
 	call bind_primitive
 
-	mov rax,L_constants + 91
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
 	push rax
-	mov rax, qword [free_var_57]
+	mov rdi, 8 * 0	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0150:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 0
+	je .L_lambda_simple_env_end_0150
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0150
+.L_lambda_simple_env_end_0150:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0150:	; copy params
+	cmp rsi, 0
+	je .L_lambda_simple_params_end_0150
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0150
+.L_lambda_simple_params_end_0150:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0150
+	jmp .L_lambda_simple_end_0150
+.L_lambda_simple_code_0150:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0150
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0150:
+	enter 0, 0
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 2	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0151:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 1
+	je .L_lambda_simple_env_end_0151
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0151
+.L_lambda_simple_env_end_0151:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0151:	; copy params
+	cmp rsi, 1
+	je .L_lambda_simple_params_end_0151
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0151
+.L_lambda_simple_params_end_0151:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0151
+	jmp .L_lambda_simple_end_0151
+.L_lambda_simple_code_0151:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0151
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0151:
+	enter 0, 0
+	mov rax ,qword[rbp + 8 * (4 + 0)]
+	push rax
+	push 1
+	mov rax, qword [free_var_27]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+
+        	cmp rax, sob_boolean_false
+
+        	je .L_if_else_0010
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 3	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0155:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 2
+	je .L_lambda_simple_env_end_0155
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0155
+.L_lambda_simple_env_end_0155:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0155:	; copy params
+	cmp rsi, 1
+	je .L_lambda_simple_params_end_0155
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0155
+.L_lambda_simple_params_end_0155:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0155
+	jmp .L_lambda_simple_end_0155
+.L_lambda_simple_code_0155:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0155
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0155:
+	enter 0, 0
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 4	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0156:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 3
+	je .L_lambda_simple_env_end_0156
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0156
+.L_lambda_simple_env_end_0156:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0156:	; copy params
+	cmp rsi, 1
+	je .L_lambda_simple_params_end_0156
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0156
+.L_lambda_simple_params_end_0156:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0156
+	jmp .L_lambda_simple_end_0156
+.L_lambda_simple_code_0156:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0156
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0156:
+	enter 0, 0
+	mov rax ,qword[rbp + 8 * (4 + 0)]
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0156:	; new closure is in rax
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0155:	; new closure is in rax
+
+        	jmp .L_if_end_0010
+
+        	.L_if_else_0010:
+	mov rax,L_constants + 6
+	push rax
+	mov rax ,qword[rbp + 8 * (4 + 0)]
 	push rax
 	push 2
+	mov rax, qword [free_var_58]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 3	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0152:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 2
+	je .L_lambda_simple_env_end_0152
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0152
+.L_lambda_simple_env_end_0152:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0152:	; copy params
+	cmp rsi, 1
+	je .L_lambda_simple_params_end_0152
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0152
+.L_lambda_simple_params_end_0152:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0152
+	jmp .L_lambda_simple_end_0152
+.L_lambda_simple_code_0152:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0152
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0152:
+	enter 0, 0
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 4	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0153:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 3
+	je .L_lambda_simple_env_end_0153
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0153
+.L_lambda_simple_env_end_0153:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0153:	; copy params
+	cmp rsi, 1
+	je .L_lambda_simple_params_end_0153
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0153
+.L_lambda_simple_params_end_0153:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0153
+	jmp .L_lambda_simple_end_0153
+.L_lambda_simple_code_0153:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0153
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0153:
+	enter 0, 0
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 5	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0154:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 4
+	je .L_lambda_simple_env_end_0154
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0154
+.L_lambda_simple_env_end_0154:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0154:	; copy params
+	cmp rsi, 1
+	je .L_lambda_simple_params_end_0154
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0154
+.L_lambda_simple_params_end_0154:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0154
+	jmp .L_lambda_simple_end_0154
+.L_lambda_simple_code_0154:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0154
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0154:
+	enter 0, 0
+	mov rax ,qword[rbp + 8 * (4 + 0)]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 1]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0154:	; new closure is in rax
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0153:	; new closure is in rax
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0152:	; new closure is in rax
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+
+        	.L_if_end_0010:
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0151:	; new closure is in rax
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0150:	; new closure is in rax
+	push rax
+	push 1
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 0	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0157:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 0
+	je .L_lambda_simple_env_end_0157
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0157
+.L_lambda_simple_env_end_0157:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0157:	; copy params
+	cmp rsi, 0
+	je .L_lambda_simple_params_end_0157
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0157
+.L_lambda_simple_params_end_0157:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0157
+	jmp .L_lambda_simple_end_0157
+.L_lambda_simple_code_0157:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0157
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0157:
+	enter 0, 0
+	mov rax ,qword[rbp + 8 * (4 + 0)]
+	push rax
+	push 1
+	mov rax ,qword[rbp + 8 * (4 + 0)]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0157:	; new closure is in rax
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 0	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0158:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 0
+	je .L_lambda_simple_env_end_0158
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0158
+.L_lambda_simple_env_end_0158:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0158:	; copy params
+	cmp rsi, 0
+	je .L_lambda_simple_params_end_0158
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0158
+.L_lambda_simple_params_end_0158:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0158
+	jmp .L_lambda_simple_end_0158
+.L_lambda_simple_code_0158:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0158
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0158:
+	enter 0, 0
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 2	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0159:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 1
+	je .L_lambda_simple_env_end_0159
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0159
+.L_lambda_simple_env_end_0159:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0159:	; copy params
+	cmp rsi, 1
+	je .L_lambda_simple_params_end_0159
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0159
+.L_lambda_simple_params_end_0159:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0159
+	jmp .L_lambda_simple_end_0159
+.L_lambda_simple_code_0159:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0159
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0159:
+	enter 0, 0
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 3	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_015a:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 2
+	je .L_lambda_simple_env_end_015a
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_015a
+.L_lambda_simple_env_end_015a:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_015a:	; copy params
+	cmp rsi, 1
+	je .L_lambda_simple_params_end_015a
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_015a
+.L_lambda_simple_params_end_015a:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_015a
+	jmp .L_lambda_simple_end_015a
+.L_lambda_simple_code_015a:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_015a
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_015a:
+	enter 0, 0
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_015a:	; new closure is in rax
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0159:	; new closure is in rax
+	push rax
+	push 1
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 2	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_015b:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 1
+	je .L_lambda_simple_env_end_015b
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_015b
+.L_lambda_simple_env_end_015b:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_015b:	; copy params
+	cmp rsi, 1
+	je .L_lambda_simple_params_end_015b
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_015b
+.L_lambda_simple_params_end_015b:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_015b
+	jmp .L_lambda_simple_end_015b
+.L_lambda_simple_code_015b:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_015b
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_015b:
+	enter 0, 0
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 3	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_015c:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 2
+	je .L_lambda_simple_env_end_015c
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_015c
+.L_lambda_simple_env_end_015c:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_015c:	; copy params
+	cmp rsi, 1
+	je .L_lambda_simple_params_end_015c
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_015c
+.L_lambda_simple_params_end_015c:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_015c
+	jmp .L_lambda_simple_end_015c
+.L_lambda_simple_code_015c:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_015c
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_015c:
+	enter 0, 0
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 4	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_015d:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 3
+	je .L_lambda_simple_env_end_015d
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_015d
+.L_lambda_simple_env_end_015d:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_015d:	; copy params
+	cmp rsi, 1
+	je .L_lambda_simple_params_end_015d
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_015d
+.L_lambda_simple_params_end_015d:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_015d
+	jmp .L_lambda_simple_end_015d
+.L_lambda_simple_code_015d:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_015d
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_015d:
+	enter 0, 0
+	mov rax ,qword[rbp + 8 * (4 + 0)]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax ,qword[rbp + 8 * (4 + 0)]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 1]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_015d:	; new closure is in rax
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_015c:	; new closure is in rax
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_015b:	; new closure is in rax
+	push rax
+	push 1
+	mov rax ,qword[rbp + 8 * (4 + 0)]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0158:	; new closure is in rax
+	push rax
+	push 2
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 0	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_015e:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 0
+	je .L_lambda_simple_env_end_015e
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_015e
+.L_lambda_simple_env_end_015e:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_015e:	; copy params
+	cmp rsi, 0
+	je .L_lambda_simple_params_end_015e
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_015e
+.L_lambda_simple_params_end_015e:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_015e
+	jmp .L_lambda_simple_end_015e
+.L_lambda_simple_code_015e:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 2
+	je .L_lambda_simple_arity_check_ok_015e
+	push qword [rsp + 8 * 2]
+	push 2
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_015e:
+	enter 0, 0
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 2	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 2	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_015f:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 1
+	je .L_lambda_simple_env_end_015f
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_015f
+.L_lambda_simple_env_end_015f:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_015f:	; copy params
+	cmp rsi, 2
+	je .L_lambda_simple_params_end_015f
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_015f
+.L_lambda_simple_params_end_015f:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_015f
+	jmp .L_lambda_simple_end_015f
+.L_lambda_simple_code_015f:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_015f
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_015f:
+	enter 0, 0
+	mov rax,L_constants + 23
+	push rax
+	push 1
+	mov rdi, (1 + 8 + 8)	; sob closure
+	call malloc
+	push rax
+	mov rdi, 8 * 1	; new rib
+	call malloc
+	push rax
+	mov rdi, 8 * 3	; extended env
+	call malloc
+	mov rdi, ENV
+	mov rsi, 0
+	mov rdx, 1
+.L_lambda_simple_env_loop_0160:	; ext_env[i + 1] <-- env[i]
+	cmp rsi, 2
+	je .L_lambda_simple_env_end_0160
+	mov rcx, qword [rdi + 8 * rsi]
+	mov qword [rax + 8 * rdx], rcx
+	inc rsi
+	inc rdx
+	jmp .L_lambda_simple_env_loop_0160
+.L_lambda_simple_env_end_0160:
+	pop rbx
+	mov rsi, 0
+.L_lambda_simple_params_loop_0160:	; copy params
+	cmp rsi, 1
+	je .L_lambda_simple_params_end_0160
+	mov rdx, qword [rbp + 8 * rsi + 8 * 4]
+	mov qword [rbx + 8 * rsi], rdx
+	inc rsi
+	jmp .L_lambda_simple_params_loop_0160
+.L_lambda_simple_params_end_0160:
+	mov qword [rax], rbx	; ext_env[0] <-- new_rib 
+	mov rbx, rax
+	pop rax
+	mov byte [rax], T_closure
+	mov SOB_CLOSURE_ENV(rax), rbx
+	mov SOB_CLOSURE_CODE(rax), .L_lambda_simple_code_0160
+	jmp .L_lambda_simple_end_0160
+.L_lambda_simple_code_0160:	; lambda-simple body
+	cmp qword [rsp + 8 * 2], 1
+	je .L_lambda_simple_arity_check_ok_0160
+	push qword [rsp + 8 * 2]
+	push 1
+	jmp L_error_incorrect_arity_simple
+.L_lambda_simple_arity_check_ok_0160:
+	enter 0, 0
+	mov rax,L_constants + 6
+	push rax
+	mov rax ,qword[rbp + 8 * (4 + 0)]
+	push rax
+	push 2
+	mov rax, qword [free_var_57]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_0160:	; new closure is in rax
+	push rax
+	push 1
+	mov rax ,qword[rbp + 8 * (4 + 0)]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 1]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	push rax
+	push 1
+	mov rax, qword [rbp + 8 * 2]
+
+                          	mov rax, qword[rax + 8 * 0]
+
+                          	mov rax, qword[rax + 8 * 0]
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	leave
+	ret 8 * (2 + 1)
+.L_lambda_simple_end_015f:	; new closure is in rax
+	leave
+	ret 8 * (2 + 2)
+.L_lambda_simple_end_015e:	; new closure is in rax
+	assert_closure(rax)
+	push SOB_CLOSURE_ENV(rax) 
+	call SOB_CLOSURE_CODE(rax)
+	mov qword [free_var_56], rax
+	mov rax, sob_void
+
+	mov rdi, rax
+	call print_sexpr_if_not_void
+
+	mov rax,L_constants + 40
+	push rax
+	push 1
 	mov rax, qword [free_var_56]
 	assert_closure(rax)
 	push SOB_CLOSURE_ENV(rax) 

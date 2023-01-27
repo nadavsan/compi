@@ -573,7 +573,6 @@ bind_primitive:
 L_code_ptr_bin_apply:
         enter 0, 0
         ;finding the list's length
-        
         xor rcx, rcx ;0
         mov rax, qword [rbp + 8 * 5] ;rax = address of scmpair list
         assert_pair(rax)
@@ -589,7 +588,7 @@ L_code_ptr_bin_apply:
                 jmp my_loop1
         my_loop_end1:
         
-        ;TODO: ecx = 0 ?
+        
 
         ;make values in the opposite order:
         ;1.pushing all argument one more time in the right order

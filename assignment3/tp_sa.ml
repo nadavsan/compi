@@ -62,7 +62,7 @@ module Reader : READER = struct
     let nt2 = word "#\\}"  in
     let nt1 = disj nt1 nt2 in
     nt1 str
-  and nt_paired_comment str =                                         (*TODO*)
+  and nt_paired_comment str =                                         
     let nt_right_bracket = char '{' in
     let nt_left_bracket = char '}' in
     let nt1 = diff nt_any (disj nt_right_bracket nt_left_bracket) in
@@ -74,7 +74,7 @@ module Reader : READER = struct
     let nt1 = caten nt_right_bracket (caten nt1 nt_left_bracket) in
     let nt1 = unitify nt1 in
     nt1 str
-  and nt_sexpr_comment str = (*TODO*)
+  and nt_sexpr_comment str = 
     let nt1 = caten (word "#;") nt_sexpr in
     let nt1 = pack nt1 (fun _ -> ()) in
     nt1 str
@@ -1236,12 +1236,12 @@ module Semantic_Analysis : SEMANTIC_ANALYSIS = struct
     | ScmApplic' (proc, args, app_kind) ->
        ScmApplic' (auto_box proc, List.map auto_box args, app_kind);;
 
-       (* TODO: get out of comment *)
+       
   let semantics expr =
     auto_box
-      (* (annotate_tail_calls TODO *)
+      (annotate_tail_calls (*TODO get out of comment*)
          (annotate_lexical_address expr)
-         (* ) *)
+         )
         ;;
 
 end;; (* end of module Semantic_Analysis *)

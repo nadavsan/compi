@@ -21,7 +21,7 @@ module type CODE_GENERATION =
     val compile_scheme_file : string -> string -> unit
   end;;
 
-module Code_Generation (*: CODE_GENERATION*)= struct
+module Code_Generation : CODE_GENERATION= struct
 
   (* areas that raise this exception are NOT for the
    * final project! please leave these unimplemented,
@@ -54,12 +54,6 @@ module Code_Generation (*: CODE_GENERATION*)= struct
     | [] -> []
     | s -> run (s, n, (fun s -> s));;
 
-  (* let remove_duplicate obj list = match list with (*(val::vals) obj = match obj with*)
-    | [] -> []
-    | list -> List.filter (fun x -> x <> obj) list;;
-  let rec remove_duplicates = function
-    | [] -> []
-    | (curr::rest) -> (curr::(remove_duplicates(remove_duplicate curr rest)));; *)
 
   let remove_duplicates = 
     let rec run = function
@@ -72,17 +66,17 @@ module Code_Generation (*: CODE_GENERATION*)= struct
     in run;;
 
 
-(* TODO: Delete here: *)
-let rec search_constant_address key = function
-  | [] -> 
-    raise (X_this_should_not_happen "error")
-  | (curr :: next) -> 
-  match curr with
-    | (k, i, r) -> 
-      if (k=key) 
-  then i 
-  else (search_constant_address key next);;
-(* end *)
+let search_constant_address =
+    let rec run key = function
+      | [] -> 
+        raise (X_syntax "problem in search_constant_address")
+      | (cur :: rest) -> 
+      match cur with
+        | (this_key, index, _) -> 
+          if (this_key = key) 
+            then index
+            else (run key rest)
+    in run;;
 
   let collect_constants =
     let rec run = function
@@ -101,9 +95,6 @@ let rec search_constant_address key = function
       | (ScmApplic' (proc', args', _) ) :: rest ->
                  (run [proc']) @ (run args')@(run rest)
       in run;;
-    (* and runs exprs' = 
-      List.fold_left (fun s expr' -> s@(run expr')) [] exprs'
-    in runs ;; *)
     
 
   let add_sub_constants =
@@ -136,8 +127,7 @@ let rec search_constant_address key = function
         | _ -> raise (X_syntax "address_from_sexpr")
       | _ -> raise (X_syntax "address_from_sexpr");;
 
-  (* let search_constant_address sexpr table=
-    address_from_sexpr sexpr table;;  *)
+
      
 
   let const_repr sexpr loc table = match sexpr with
@@ -321,39 +311,42 @@ let rec search_constant_address key = function
     ];;
 
 
-  let collect_free_vars =
-    let rec run = function
-      | ScmConst' _ -> []
-      | ScmVarGet' (Var' (v, Free)) -> [v]
-      | ScmVarGet' _ -> []
-      | ScmIf' (test, dit, dif) -> (run test)@(run dit)@(run dif)
-      | ScmSeq' exprs' -> runs exprs'
-      | ScmOr' exprs' -> runs exprs'
-      | ScmVarSet' (Var' (v, Free), expr') -> (v)::(run expr')
-      | ScmVarSet' (_, expr') -> (run expr')
-      | ScmVarDef' (Var' (v, Free), expr') -> (v)::(run expr')
-      | ScmVarDef' (_, expr') -> run expr'
-      | ScmBox' (Var' (v, Free)) -> [v]
-      | ScmBox' _ -> []
-      | ScmBoxGet' (Var' (v, Free)) -> [v]
-      | ScmBoxGet' _ -> []
-      | ScmBoxSet' (Var' (v, Free), expr') -> (v)::(run expr')
-      | ScmBoxSet' (_, expr') -> run expr'
-      | ScmLambda' (_, _, expr') -> (run expr')
-      | ScmApplic' (expr', exprs', _) -> runs (expr' :: exprs')
-    and runs exprs' =
-      List.fold_left
-        (fun vars expr' -> vars @ (run expr'))
-        []
-        exprs'
-    in fun exprs' ->
-       let primitives =
-         List.map
-           (fun (scheme_name, _) -> scheme_name)
-           global_bindings_table
-       and free_vars_in_code = runs exprs' in
-       remove_duplicates
-         (primitives @ free_vars_in_code);;
+let collect_free_vars =
+  let rec run = function
+    | ScmConst' _ -> []
+    | ScmVarGet' (Var' (v, Free)) -> [v]
+    | ScmVarGet' _ -> []
+    | ScmIf' (test, dit, dif) -> (run test)@(run dit)@(run dif)
+    | ScmSeq' exprs' -> runs exprs'
+    | ScmOr' exprs' -> runs exprs'
+    | ScmVarSet' (Var' (v, Free), expr') -> (v)::(run expr')
+    | ScmVarSet' (_, expr') -> (run expr')
+    | ScmVarDef' (Var' (v, Free), expr') -> (v)::(run expr')
+    | ScmVarDef' (_, expr') -> run expr'
+    | ScmBox' (Var' (v, Free)) -> [v]
+    | ScmBox' _ -> []
+    | ScmBoxGet' (Var' (v, Free)) -> [v]
+    | ScmBoxGet' _ -> []
+    | ScmBoxSet' (Var' (v, Free), expr') -> (v)::(run expr')
+    | ScmBoxSet' (_, expr') -> run expr'
+    | ScmLambda' (_, _, expr') -> (run expr')
+    | ScmApplic' (expr', exprs', _) -> runs (expr' :: exprs')
+  and runs exprs' =
+    List.fold_left
+      (fun vars expr' -> vars @ (run expr'))
+      []
+      exprs'
+  in fun exprs' ->
+     let primitives =
+       List.map
+         (fun (scheme_name, _) -> scheme_name)
+         global_bindings_table
+     and free_vars_in_code = runs exprs' in
+     remove_duplicates
+       (primitives @ free_vars_in_code);;
+
+
+
 
   let make_free_vars_table =
     let rec run index = function
@@ -466,7 +459,6 @@ let rec search_constant_address key = function
          (Printf.sprintf "\tmov rax, qword [rbp + 8 * 2]\n
                           \tmov rax, qword[rax + 8 * %d]\n
                           \tmov rax, qword[rax + 8 * %d]\n" major minor)
-                          (*TODO correct?*)
       | ScmIf' (test, dit, dif) ->
         let label_else = make_if_else () in
         let label_end = make_if_end () in
@@ -537,12 +529,7 @@ let rec search_constant_address key = function
         ^"\tcall malloc\n"
         ^(Printf.sprintf "\tmov rbx, PARAM(%d)\n" minor)
         ^"\tmov qword [rax], rbx\n"
-        (* (run params env (ScmVarGet'(Var' (v, Param minor)))) *)
-        (* ^"\tmov rdi, 8\n" *)
-        (* ^"\tmov rbx, rax\n" *)
-        (* ^"\tcall malloc\n" *)
-        (* ^"\tmov qword [rax], rbx\n" *)
-      | ScmBox' _ -> raise X_not_yet_implemented
+      | ScmBox' _ -> raise (X_this_should_not_happen "upper box should work")
       | ScmBoxGet' var' ->
          (run params env (ScmVarGet' var'))
          ^ "\tmov rax, qword [rax]\n"
@@ -612,7 +599,7 @@ let rec search_constant_address key = function
         ^ "\tleave\n"
         ^ (Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params'))
         ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
-      | ScmLambda' (params', Opt opt, body) -> (*raise X_not_yet_implemented*) (*TODO*)
+      | ScmLambda' (params', Opt opt, body) -> 
         let args_count = List.length params' in
         let label_loop_env = make_lambda_opt_loop_env ()
         and label_loop_env_end = make_lambda_opt_loop_env_end ()
@@ -630,10 +617,10 @@ let rec search_constant_address key = function
         and label_end = make_lambda_opt_end () 
         and label_stack_ok = make_lambda_opt_stack_ok()
         in
-        "\tmov rdi, (1 + 8 + 8)\t; sob closure\n"
+        "\tmov rdi, (1 + 8 + 8)   ;closure\n"
          ^ "\tcall malloc\n"
          ^ "\tpush rax\n"
-         ^ (Printf.sprintf "\tmov rdi, 8 * %d\t; new rib\n" params)
+         ^ (Printf.sprintf "\tmov rdi, 8 * %d  ; new rib\n" params)
          ^ "\tcall malloc\n"
          ^ "\tpush rax\n"
          ^ (Printf.sprintf "\tmov rdi, 8 * %d\t; extended env\n" (env + 1))
@@ -641,7 +628,7 @@ let rec search_constant_address key = function
          ^ "\tmov rdi, ENV\n"
          ^ "\tmov rsi, 0\n"
          ^ "\tmov rdx, 1\n"
-         ^ (Printf.sprintf "%s:\t; ext_env[i + 1] <-- env[i]\n"
+         ^ (Printf.sprintf "%s:\t; ext_env = env\n"
               label_loop_env)
          ^ (Printf.sprintf "\tcmp rsi, %d\n" env )
          ^ (Printf.sprintf "\tje %s\n" label_loop_env_end)
@@ -661,7 +648,7 @@ let rec search_constant_address key = function
          ^ "\tinc rsi\n"
          ^ (Printf.sprintf "\tjmp %s\n" label_loop_params)
          ^ (Printf.sprintf "%s:\n" label_loop_params_end)
-         ^ "\tmov qword [rax], rbx\t; ext_env[0] <-- new_rib \n"
+         ^ "\tmov qword [rax], rbx\t; ext_env = new_rib \n"
          ^ "\tmov rbx, rax\n"
          ^ "\tpop rax\n"
          ^ "\tmov byte [rax], T_closure\n"
@@ -671,11 +658,11 @@ let rec search_constant_address key = function
          ^ (Printf.sprintf "%s:\t; lambda-opt body\n" label_code)
          ^ (Printf.sprintf "\tcmp qword [rsp + 8 * 2], %d\n"
          (List.length params'))
-         ^ (Printf.sprintf "\tjg %s\n" label_arity_more)(*mor args*)
-         ^ (Printf.sprintf "\tje %s\n" label_arity_ok)(*eq args*)
+         ^ (Printf.sprintf "\tje %s  ;same num_of_args\n" label_arity_ok)
+         ^ (Printf.sprintf "\tjg %s  ;greater num_of_args\n" label_arity_more)
          ^ "\tpush qword [rsp + 8 * 2]\n"
          ^ (Printf.sprintf "\tpush %d\n" (List.length params'))
-         ^ "\tjmp L_error_incorrect_arity_opt\n"(*less args*)
+         ^ "\tjmp L_error_incorrect_arity_opt ;less than num_of_args\n"
          ^ (Printf.sprintf "%s:\n" label_arity_ok)
          ^ "\tsub rsp, 8 * 1\n"
          ^ "\tmov rdi, rsp \n"
@@ -706,7 +693,7 @@ let rec search_constant_address key = function
          ^ "\tmov qword [rdi], sob_nil\n"
          ^ (Printf.sprintf "\tjmp %s\n" label_stack_ok)
          ^ (Printf.sprintf "%s:\t\n"label_arity_more)
-         ^ "\tmov rsi, qword [rsp + (8 * 2)]\n"(***)
+         ^ "\tmov rsi, qword [rsp + (8 * 2)]\n"
          ^ (Printf.sprintf "\tlea rcx, [rsi - %d]\n" args_count)
          ^ "\tlea rsi, [rsp + (8 * rsi) + (8 * 2)]\n"
          ^ "\tmov r10, rsi\n"
@@ -755,7 +742,6 @@ let rec search_constant_address key = function
          ^ "\tleave\n"
          ^ (Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params' + 1))
          ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
-         (*lev start*)
       | ScmApplic' (proc, args, Non_Tail_Call) -> 
         let args_push = 
           String.concat "" (List.map (fun arg ->
@@ -769,9 +755,7 @@ let rec search_constant_address key = function
         ^ "\tassert_closure(rax)\n"
         ^"\tpush SOB_CLOSURE_ENV(rax) \n"
         ^"\tcall SOB_CLOSURE_CODE(rax)\n"
-        (*lev's end*)
       | ScmApplic' (proc, args, Tail_Call) -> 
-       (* (*(run params env (ScmApplic'(proc, args, Non_Tail_Call)))*)*)
        let arguments = List.fold_right (fun cur acc -> acc^(run params env cur)^"\tpush rax\n") args "" 
        and num = List.length(args)
        and label_fix_stuck = make_fix_stack_label()
@@ -792,12 +776,12 @@ let rec search_constant_address key = function
        ^"\tshl rdx, 3\n"
        ^"\tmov rdi, rbp\n"
        ^"\tadd rdi, rdx\n"
-       ^"\tmov r8, qword[rbp]\n"
+       ^"\tmov r8, qword[rbp]\n"                        
        ^"\tmov rcx, rbp\n"
        ^"\tsub rcx, 8\n"
        ^(Printf.sprintf"\t %s:\n" label_loop_fix_stuck)
        ^"\tcmp rsp, rcx\n"
-       ^(Printf.sprintf"ja %s\n " label_loop_fix_stuck_end)
+       ^(Printf.sprintf"ja %s\n " label_loop_fix_stuck_end)             
        ^"\tmov rbx, qword[rcx]\n"
        ^"\t mov qword[rdi], rbx\n"
        ^"\tsub rdi, 8\n"
@@ -834,9 +818,8 @@ let rec search_constant_address key = function
     code;;
 
   let compile_scheme_string file_out user =
-    (* TODO: get out of comment *)
-    (* let init = file_to_string "init.scm" in *)
-    let source_code = (*init ^*) user in
+    let init = file_to_string "init.scm" in
+    let source_code = init ^ user in
     let sexprs = (PC.star Reader.nt_sexpr source_code 0).found in
     let exprs = List.map Tag_Parser.tag_parse sexprs in
     let exprs' = List.map Semantic_Analysis.semantics exprs in
@@ -849,10 +832,10 @@ let rec search_constant_address key = function
 
 end;; (* end of Code_Generation struct *)
 (* TODO: delete here: *)
-open Code_Generation;;
+(* open Code_Generation;;
 
 let show str = Semantic_Analysis.semantics
-(Tag_Parser.tag_parse (Reader.nt_sexpr str 0).found);;
+(Tag_Parser.tag_parse (Reader.nt_sexpr str 0).found);; *)
 
 (* end of delete *)
 
