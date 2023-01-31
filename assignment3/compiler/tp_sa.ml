@@ -605,7 +605,7 @@ module Tag_Parser : TAG_PARSER = struct
 
   let rec macro_expand_cond_ribs ribs =
     match ribs with
-    | ScmNil -> (ScmPair (ScmSymbol "begin", ScmNil))
+    | ScmNil -> ScmNil
     | ScmPair (ScmPair (ScmSymbol "else", exprs), ribs) ->
       ScmPair (ScmSymbol "begin", exprs)
     | ScmPair (ScmPair (expr,
@@ -808,8 +808,6 @@ module Tag_Parser : TAG_PARSER = struct
                        (Printf.sprintf
                           "Unknown form: \n%a\n"
                           sprint_sexpr sexpr));;
-
-
 
 
 
