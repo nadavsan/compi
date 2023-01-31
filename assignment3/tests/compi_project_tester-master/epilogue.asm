@@ -573,7 +573,6 @@ bind_primitive:
 L_code_ptr_bin_apply:
         enter 0, 0
         ;finding the list's length
-        int3
         xor rcx, rcx ;0
         mov rax, qword [rbp + 8 * 5] ;rax = address of scmpair list
         assert_pair(rax)
@@ -589,7 +588,7 @@ L_code_ptr_bin_apply:
                 jmp my_loop1
         my_loop_end1:
         
-        int3
+        
 
         ;make values in the opposite order:
         ;1.pushing all argument one more time in the right order
@@ -604,7 +603,7 @@ L_code_ptr_bin_apply:
                 inc rcx
                 jmp my_loop2
         my_loop_end2:
-        int3
+        
         ;2.overwriting element above by element below but in correct order
         lea rdx, [8 * (rbx + 6)] ;nubmer of *bytes* we need to skip
         mov rsi, qword [rbp + 8 * 0] ; save old rbp
@@ -622,7 +621,7 @@ L_code_ptr_bin_apply:
                 xor rax, rax
                 jmp my_loop3
         my_loop_end3:
-        int3
+        
         cmp rcx, 6
         jg seven_or_more
         lea rsp, [rsp + 8 * rcx];pop all 1st time pushed args

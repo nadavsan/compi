@@ -80,21 +80,20 @@ let search_constant_address =
 
   let collect_constants =
     let rec run = function
-      | [] -> []
-      | (ScmVarGet' _) :: rest -> run rest
-      | (ScmBox' _):: rest -> run rest
-      | (ScmBoxGet' _) :: rest -> run rest
-      | (ScmConst' sexpr) ::rest -> sexpr::(run rest)
-      | (ScmIf' (test, dit, dif))::(rest) -> (run [test])@(run [dit])@(run [dif])@(run rest)
-      | (ScmSeq' es') :: rest -> (run es')@(run rest)
-      | (ScmOr' es') :: rest -> (run es')@(run rest)
-      | (ScmVarSet'(_, expr')) :: rest -> (run [expr'])@(run rest)
-      | (ScmVarDef'(_, expr')) :: rest -> (run [expr'])@(run rest)
-      | (ScmBoxSet'(_, expr')) :: rest -> (run [expr'])@(run rest)
-      | (ScmLambda' (_, _, expr')) :: rest -> (run [expr'])@(run rest)
-      | (ScmApplic' (proc', args', _) ) :: rest ->
-                 (run [proc']) @ (run args')@(run rest)
-      in run;;
+      |ScmVarGet' _ | ScmBox' _ | ScmBoxGet' _ -> []
+      | ScmConst' sexpr -> [sexpr]
+      | ScmIf' (test, dit, dif) -> (run test)@(run dit)@(run dif)
+      | ScmSeq' es' -> runs es'
+      | ScmOr' es' -> runs es'
+      | ScmVarSet'(_, expr') -> run expr'
+      | ScmVarDef'(_, expr') -> run expr'
+      | ScmBoxSet'(_, expr') -> run expr'
+      | ScmLambda' (_, _, expr') -> run expr';
+      | ScmApplic' (proc', args', _) ->
+                  (run proc') @ (runs args')
+    and runs exprs' = 
+      List.fold_left (fun s expr' -> s@(run expr')) [] exprs'
+    in runs ;;
     
 
   let add_sub_constants =
@@ -440,6 +439,9 @@ let collect_free_vars =
     make_make_label ".L_loop_fix_stuck";;
   let make_label_loop_fix_stuck_end =
     make_make_label ".L_loop_fix_stuck_end";;
+  let make_label_applic_TC =
+    make_make_label ".L_applic_TC";;
+  
 
   let code_gen exprs' =
     let consts = make_constants_table exprs' in
@@ -525,7 +527,6 @@ let collect_free_vars =
       | ScmVarDef' (Var' (v, Bound (major, minor)), expr') ->
          raise X_not_yet_supported
       | ScmBox' (Var' (v, Param minor)) ->
-        (*TODO: might need to change it*)
         "\tmov rdi, 8\n"
         ^"\tcall malloc\n"
         ^(Printf.sprintf "\tmov rbx, PARAM(%d)\n" minor)
@@ -601,167 +602,7 @@ let collect_free_vars =
         ^ (Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params'))
         ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
       | ScmLambda' (params', Opt opt, body) -> 
-        let arg_count = List.length params' in
-          let loop_env_label = make_lambda_opt_loop_env () in
-          let loop_env_end_label = make_lambda_opt_loop_env_end () in
-          let loop_params_label =  make_lambda_opt_loop_params () in
-          let loop_params_end_label =  make_lambda_opt_loop_params_end () in
-          let loop_opt_spec_param_loop = make_lambda_opt_loop_params () in
-          let loop_opt_spec_params_end_label =  make_lambda_opt_loop_params_end () in
-          let opt_code_label = make_lambda_opt_code () in
-          (* let make_lambda_opt_end = make_lambda_opt_end () in *)
-          let arity_exact_label =  make_lambda_opt_arity_exact () in
-          let arity_more_label = make_lambda_opt_arity_more () in
-          let stack_ok_label = make_lambda_opt_stack_ok () in
-          let opt_loop_label = make_lambda_opt_loop () in
-          let opt_loop_exit_label = make_lambda_opt_loop_exit () in
-          let label_end = make_lambda_opt_end () in
-          let shrink_loop = make_lambda_opt_loop_params () in
-          let shrink_end = make_lambda_opt_loop_params_end () in
-  
-            "\tmov rdi, (1 + 8 + 8)\t; sob closure\n"
-          ^ "\tcall malloc\n"
-          ^ "\tpush rax\n"
-          ^ (Printf.sprintf "\tmov rdi, 8 * %d\t; new rib\n" params)
-          ^ "\tcall malloc\n"
-          ^ "\tpush rax\n"
-          ^ (Printf.sprintf "\tmov rdi, 8 * %d\t; extended env\n" (env + 1))
-          ^ "\tcall malloc\n"
-          ^ "\tmov rdi, ENV\n"
-          ^ "\tmov rsi, 0\n"
-          ^ "\tmov rdx, 1\n"
-          ^ (Printf.sprintf "%s:\t; ext_env[i + 1] <-- env[i]\n"
-               loop_env_label)
-          ^ (Printf.sprintf "\tcmp rsi, %d\n" env)
-          ^ (Printf.sprintf "\tje %s\n" loop_env_end_label)
-          ^ "\tmov rcx, qword [rdi + 8 * rsi]\n"
-          ^ "\tmov qword [rax + 8 * rdx], rcx\n"
-          ^ "\tinc rsi\n"
-          ^ "\tinc rdx\n"
-          ^ (Printf.sprintf "\tjmp %s\n" loop_env_label)
-          ^ (Printf.sprintf "%s:\n" loop_env_end_label)
-          ^ "\tpop rbx\n"
-          ^ "\tmov rsi, 0\n"
-          ^ (Printf.sprintf "%s:\t; copy params\n" loop_params_label)
-          ^ (Printf.sprintf "\tcmp rsi, %d\n" params)
-          ^ (Printf.sprintf "\tje %s\n" loop_params_end_label)
-          ^ "\tmov rdx, qword [rbp + 8 * rsi + 8 * 4]\n"
-          ^ "\tmov qword [rbx + 8 * rsi], rdx\n"
-          ^ "\tinc rsi\n"
-          ^ (Printf.sprintf "\tjmp %s\n" loop_params_label)
-          ^ (Printf.sprintf "%s:\n" loop_params_end_label)
-          ^ "\tmov qword [rax], rbx\t; ext_env[0] <-- new_rib \n"
-          ^ "\tmov rbx, rax\n"
-          ^ "\tpop rax\n"
-          ^ "\tmov byte [rax], T_closure\n"
-          ^ "\tmov SOB_CLOSURE_ENV(rax), rbx\n"
-          ^ (Printf.sprintf "\tmov SOB_CLOSURE_CODE(rax), %s\n" opt_code_label)
-          ^ (Printf.sprintf "\tjmp %s\n" label_end) ^
-          
-          
-          (Printf.sprintf "%s:\n" opt_code_label) ^
-          "mov r10, qword [rsp+8*2]\n" ^  (*r10 has the real num of arguments given*)
-          (Printf.sprintf "cmp r10, %d\n" (List.length params')) ^
-          (Printf.sprintf "je %s\n" arity_exact_label) ^
-          (Printf.sprintf "cmp r10, %d\n" (List.length params')) ^ (*I think sholc be re checked*)
-          (Printf.sprintf "jg %s\n" arity_more_label) ^
-          (Printf.sprintf "jmp L_error_incorrect_arity_opt\n") ^
-  
-  
-          (Printf.sprintf "%s:\n" arity_exact_label ) ^
-          "sub rsp, 8\n" ^
-          (Printf.sprintf "mov rdx, 3+%d\n" (List.length params')) ^ (*not sure if shoud be length + 1*)
-          "mov qword rbx, rsp\n" ^
-          (Printf.sprintf "%s:\n" loop_opt_spec_param_loop) ^ (*should maybe use different label*)
-          "mov qword rcx, [rbx+8]\n" ^
-          "mov qword [rbx], rcx\n" ^ 
-          "dec rdx\n" ^
-          "add rbx, 8\n" ^
-          "cmp rdx, 0\n" ^
-          (Printf.sprintf "je %s\n" loop_opt_spec_params_end_label) ^ 
-          (Printf.sprintf "jmp %s\n" loop_opt_spec_param_loop) ^ 
-          (Printf.sprintf "%s:\n" loop_opt_spec_params_end_label) ^
-          (* "mov r9, [rbp]\n" ^
-          "sub rbp, 8\n" ^ (*needed???? problem!*)
-          "mov r9, [rbp]\n" ^ *)
-          (* "lea rbx, [rsp+8*2]\n" ^ tries to change in order to get the right position *)
-          "inc r10\n" ^ (*I want to put one more arg count*)
-          "mov qword [rsp+8*2], r10\n" ^(*Problem! Can't get the correct address*)
-          (* "lea rbx, [rbx+32]\n" ^ *)
-          "add r10, 2\n" ^
-          "mov qword [rsp + 8*(r10)], sob_nil\n" ^
-          "mov r9, [rbp]\n" ^
-          (Printf.sprintf"jmp %s\n" stack_ok_label) ^
-  
-  
-  
-          (Printf.sprintf "%s:\n" arity_more_label) ^
-          "mov r13, [rsp+2*8]\n" ^
-          "mov rax, sob_nil\n" ^
-          "mov r10, [rsp+2*8]\n" ^
-          (*PUSH R8????*)
-          "lea r8, [rsp+ 8*(2+r10)]\n" ^
-          (Printf.sprintf "sub r10, %d\n" (List.length params')) ^ (*because I want rbx to hold the number of args to put in the list*)
-          (Printf.sprintf "%s:\n" opt_loop_label) ^
-          "cmp r10, 0\n" ^
-          (Printf.sprintf "je %s\n" opt_loop_exit_label) ^
-          "mov rcx, rax\n" ^ (*rcx always holds the previous pair and soon to be cdr*)
-          "mov rdx, [r8]\n" ^ (*rdx will hold the new car*)
-          "mov rdi, 17\n" ^
-          "call malloc\n" ^
-          "mov byte [rax], T_pair\n" ^
-          "mov SOB_PAIR_CDR(rax), rcx\n" ^
-          "mov SOB_PAIR_CAR(rax), rdx\n" ^
-          "sub r8, 8\n" ^
-          "dec r10\n" ^
-          (Printf.sprintf "jmp %s\n" opt_loop_label) ^
-          (Printf.sprintf "%s:\n" opt_loop_exit_label) ^
-          (*POP R8???*)
-          (Printf.sprintf "mov [rsp+8*(2+%d)], rax\n" ((List.length params')+1)) ^
-          (Printf.sprintf "mov r10, %d\n" ((List.length params')+1)) ^
-          "mov [rsp+16], r10\n" ^
-  
-          (*shrinking the stack now*)
-          (*I need to put it all up numOfParamsOnTheBeginning - *)
-          "mov r12, rsp\n" ^
-          (Printf.sprintf "add r12, 8*(2+%d)\n" ((List.length params')+1)) ^ (*r12 holds the first arg to move*)
-          "sub r13, [rsp+16]\n" ^ (*creating the offset*)
-          "mov r10, r13\n" ^
-          "shl r10, 3\n" ^
-          "mov r15, r10\n" ^
-          "add r10, r12\n" ^ (*now r10 holds the place the first place that should be copied to*)
-          "mov r9, [rsp+16]\n" ^
-          "add r9, 3\n" ^ (*r9 has the num of reps*)
-          (Printf.sprintf "%s:\n" shrink_loop) ^
-          "cmp r9, 0\n" ^
-          (Printf.sprintf "je %s\n" shrink_end) ^
-          "mov r14, [r12]\n" ^
-          "mov [r10], r14\n" ^
-          "sub r12, 8\n" ^
-          "sub r10, 8\n" ^
-          "dec r9\n" ^
-          (Printf.sprintf "jmp %s\n" shrink_loop) ^
-  
-          (Printf.sprintf "%s:\n" shrink_end) ^
-          "add rsp, r15\n" ^
-  
-  
-  
-          
-          (*start of regular body like simple*)
-          (Printf.sprintf "%s:\n" stack_ok_label) ^
-          "mov r9, [rbp]\n" ^
-          "enter 0, 0\n" (*rbp, rsp*) ^
-          (run ((List.length params')+1) (env + 1) body) ^
-          "leave\n" ^
-          "mov r9, [rbp]\n" ^
-          (Printf.sprintf "ret 8 * (3 + %d)\n" (List.length params')) ^ (*not sure it should be 7*)
-          (Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
-
-
-
-
-        (* let args_count = List.length params' in
+        let args_count = List.length params' in
         let label_loop_env = make_lambda_opt_loop_env ()
         and label_loop_env_end = make_lambda_opt_loop_env_end ()
         and label_loop_params = make_lambda_opt_loop_params ()
@@ -778,149 +619,149 @@ let collect_free_vars =
         and label_end = make_lambda_opt_end () 
         and label_stack_ok = make_lambda_opt_stack_ok()
         in
-        "\tmov rdi, (1 + 8 + 8)   ;closure\n"
-         ^ "\tcall malloc\n"
-         ^ "\tpush rax\n"
-         ^ (Printf.sprintf "\tmov rdi, 8 * %d  ; new rib\n" params)
-         ^ "\tcall malloc\n"
-         ^ "\tpush rax\n"
-         ^ (Printf.sprintf "\tmov rdi, 8 * %d\t; extended env\n" (env + 1))
-         ^ "\tcall malloc\n"
-         ^ "\tmov rdi, ENV\n"
-         ^ "\tmov rsi, 0\n"
-         ^ "\tmov rdx, 1\n"
-         ^ (Printf.sprintf "%s:\t; ext_env = env\n"
-              label_loop_env)
-         ^ (Printf.sprintf "\tcmp rsi, %d\n" env )
-         ^ (Printf.sprintf "\tje %s\n" label_loop_env_end)
-         ^ "\tmov rcx, qword [rdi + 8 * rsi]\n"
-         ^ "\tmov qword [rax + 8 * rdx], rcx\n"
-         ^ "\tinc rsi\n"
-         ^ "\tinc rdx\n"
-         ^ (Printf.sprintf "\tjmp %s\n" label_loop_env)
-         ^ (Printf.sprintf "%s:\n" label_loop_env_end)
-         ^ "\tpop rbx\n"
-         ^ "\tmov rsi, 0\n"
-         ^ (Printf.sprintf "%s:\t; copy params\n" label_loop_params)
-         ^ (Printf.sprintf "\tcmp rsi, %d\n" params)
-         ^ (Printf.sprintf "\tje %s\n" label_loop_params_end)
-         ^ "\tmov rdx, qword [rbp + 8 * rsi + 8 * 4]\n"
-         ^ "\tmov qword [rbx + 8 * rsi], rdx\n"
-         ^ "\tinc rsi\n"
-         ^ (Printf.sprintf "\tjmp %s\n" label_loop_params)
-         ^ (Printf.sprintf "%s:\n" label_loop_params_end)
-         ^ "\tmov qword [rax], rbx\t; ext_env = new_rib \n"
-         ^ "\tmov rbx, rax\n"
-         ^ "\tpop rax\n"
-         ^ "\tmov byte [rax], T_closure\n"
-         ^ "\tmov SOB_CLOSURE_ENV(rax), rbx\n"
-         ^ (Printf.sprintf "\tmov SOB_CLOSURE_CODE(rax), %s\n" label_code)
-         ^ (Printf.sprintf "\tjmp %s\n" label_end)
-         ^ (Printf.sprintf "%s:\t; lambda-opt body\n" label_code)
-         ^ (Printf.sprintf "\tcmp qword [rsp + 8 * 2], %d\n"
-         (List.length params'))
-         ^ (Printf.sprintf "\tje %s  ;same num_of_args\n" label_arity_ok)
-         ^ (Printf.sprintf "\tjg %s  ;greater num_of_args\n" label_arity_more)
-         ^ "\tpush qword [rsp + 8 * 2]\n"
-         ^ (Printf.sprintf "\tpush %d\n" (List.length params'))
-         ^ "\tjmp L_error_incorrect_arity_opt ;less than num_of_args\n"
-         ^ (Printf.sprintf "%s:\n" label_arity_ok)
-         ^ "\tsub rsp, 8 * 1\n"
-         ^ "\tmov rdi, rsp \n"
-         ^ "\t;mov ret\n"
-         ^ "\tmov rax, qword [rdi + (8 * 1)]\n"
-         ^ "\tmov qword [rdi], rax\n"
-         ^ "\tadd rdi, 8\n"
-         ^ "\t;mov env\n"
-         ^ "\tmov rax, qword [rdi + (8 * 1)]\n"
-         ^ "\tmov qword [rdi], rax\n"
-         ^ "\tadd rdi, 8\n"
-         ^ "\t;mov & update COUNT\n"
-         ^ "\tmov rax, qword [rdi +(8 * 1)]\n"
-         ^ "\tmov rcx, rax\n"
-         ^ "\tinc rax\n"
-         ^ "\tmov qword [rdi], rax\n"
-         ^ "\tadd rdi, 8\n"
-         ^ "\t;LOOP:move params\n"
-         ^ (Printf.sprintf "%s:\t\n" label_loop_No_1)
-         ^ "\tcmp rcx, 0\n"
-         ^ (Printf.sprintf "\tje %s\n" label_loop_No_1_end)
-         ^ "\tmov rax, qword [rdi + 8]\n"
-         ^ "\tmov qword [rdi], rax\n"
-         ^ "\tadd rdi, 8\n"
-         ^ "\tdec rcx\n"
-         ^ (Printf.sprintf "\tjmp %s\n" label_loop_No_1)
-         ^ (Printf.sprintf "%s:\t\n"label_loop_No_1_end)
-         ^ "\tmov qword [rdi], sob_nil\n"
-         ^ (Printf.sprintf "\tjmp %s\n" label_stack_ok)
-         ^ (Printf.sprintf "%s:\t\n"label_arity_more)
-         ^ "\tmov rsi, qword [rsp + (8 * 2)]\n"
-         ^ (Printf.sprintf "\tlea rcx, [rsi - %d]\n" args_count)
-         ^ "\tlea rsi, [rsp + (8 * rsi) + (8 * 2)]\n"
-         ^ "\tmov r10, rsi\n"
-         ^ "\tmov r9, sob_nil\n"
-         ^ (Printf.sprintf "%s:\t\n" label_loop_No_2)
-         ^ "\tcmp rcx, 0\n"
-         ^ (Printf.sprintf "\tje %s\n" label_loop_No_2_end)
-         ^ "\tmov rdi, 1 + 8 + 8\n"
-         ^ "\tcall malloc\n"
-         ^ "\tmov byte [rax], T_pair\n"
-         ^ "\tmov rbx, qword [rsi]\n"
-         ^ "\tmov SOB_PAIR_CAR(rax), rbx\n"
-         ^ "\tmov SOB_PAIR_CDR(rax), r9\n"
-         ^ "\tmov r9, rax\n"
-         ^ "\tsub rsi, 8 * 1\n"
-         ^ "\tdec rcx\n"
-         ^ (Printf.sprintf "\tjmp %s\n" label_loop_No_2)
-         ^ (Printf.sprintf "%s:\t\n"label_loop_No_2_end)
-         ^ "\tmov qword [r10], r9\n"
-         ^ "\tsub r10, 8 * 1; the new dest!\n"
-         ^ (Printf.sprintf "\tlea rsi, [rsp + (8 * (%d + 2))];the new src\n" args_count)
-         ^ (Printf.sprintf "\tmov rcx, %d \n" args_count)
-         ^ (Printf.sprintf "%s:\t\n"label_loop_No_3)
-         ^ "\tcmp rcx, 0\n"
-         ^ (Printf.sprintf "\tje %s\n" label_loop_No_3_end)
-         ^ "\tmov rax, qword [rsi]\n"
-         ^ "\tmov qword [r10], rax\n"
-         ^ "\tsub r10, 8 * 1\n"
-         ^ "\tsub rsi, 8 * 1\n"
-         ^ "\tdec rcx\n"
-         ^ (Printf.sprintf "\tjmp %s\n" label_loop_No_3)
-         ^ (Printf.sprintf "%s:\t\n"label_loop_No_3_end)
-         ^ (Printf.sprintf "\tmov qword [r10], 1 + %d; 1=opt\n"args_count)
-         ^ "\tsub r10, 8 * 1\n"
-         ^ "\tsub rsi, 8 * 1\n"
-         ^ "\tmov rax, qword [rsi] ;env\n"
-         ^ "\tmov qword [r10], rax\n"
-         ^ "\tsub r10, 8 * 1\n"
-         ^ "\tsub rsi, 8 * 1\n"
-         ^ "\tmov rax, qword [rsi] ;ret\n"
-         ^ "\tmov qword [r10], rax\n"
-         ^ "\tmov rsp, r10\n"
-         ^ (Printf.sprintf "%s:\t\n" label_stack_ok)
-         ^ "\tenter 0, 0\n"
-         ^ (run (List.length params' + 1) (env + 1) body)
-         ^ "\tleave\n"
-         ^ (Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params' + 1))
-         ^ (Printf.sprintf "%s:\t; new closure is in rax\n" label_end) *)
+        "\tmov rdi, (1 + 8 + 8)\n"
+        ^"\tcall malloc\n"
+        ^"\tpush rax\n"
+        ^(Printf.sprintf "\tmov rdi, 8 * %d\n" params)
+        ^"\tcall malloc\n"
+        ^"\tpush rax\n"
+        ^(Printf.sprintf "\tmov rdi, 8 * %d\n" (env + 1))
+        ^"\tcall malloc\n"
+        ^"\tmov rdi, ENV\n"
+        ^"\txor rsi, rsi\n"
+        ^"\txor rdx, rdx\n"
+        ^"\tinc rdx\n"
+        ^(Printf.sprintf
+        "\t%s:\n
+        \tcmp rsi, %d\n
+        \tje %s\n"
+        label_loop_env env label_loop_env_end)
+        ^"\tmov rcx, qword [rdi + 8 * rsi]\n"
+        ^"\tmov qword [rax + 8 * rdx], rcx\n"
+        ^"\tadd rdx, 1\n"
+        ^"\tadd rsi, 1\n"
+        ^(Printf.sprintf
+        "\tjmp %s\n
+        \t%s:\n"
+        label_loop_env label_loop_env_end)
+        ^"\tpop rbx\n"
+        ^"\txor rsi, rsi\n"
+        ^(Printf.sprintf
+        "\t%s:\n
+        \tcmp rsi, %d\n
+        \tje %s\n"
+        label_loop_params params label_loop_params_end)
+        ^"\tmov rdx, qword [rbp + 8 * rsi + 8 * 4]\n"
+        ^"\tmov qword [rbx + 8 * rsi], rdx\n"
+        ^"\tadd rsi, 1\n"
+        ^(Printf.sprintf
+        "\tjmp %s\n
+        \t%s:\n"
+        label_loop_params label_loop_params_end)
+        ^"\tmov qword [rax], rbx\t; ext_env = new_rib \n"
+        ^"\tmov rbx, rax\n"
+        ^"\tpop rax\n"
+        ^"\tmov byte [rax], T_closure\n"
+        ^"\tmov SOB_CLOSURE_ENV(rax), rbx\n"
+        ^(Printf.sprintf "\tmov SOB_CLOSURE_CODE(rax), %s\n
+        \tjmp %s\n
+        \t%s:\n
+        \tcmp qword [rsp + 8 * 2], %d\n
+        \tje %s  ;same num_of_args\n
+        \tjg %s  ;greater num_of_args\n"
+        label_code label_end label_code (List.length params') label_arity_ok label_arity_more)
+        ^"\tpush qword [rsp + 8 * 2]\n"
+        ^(Printf.sprintf "\tpush %d\n" (List.length params'))
+        ^"\tjmp L_error_incorrect_arity_opt ;less than num_of_args\n"
+        ^(Printf.sprintf "%s:\n" label_arity_ok)
+        ^"\tsub rsp, 8 * 1\n"
+        ^"\tlea rdi, [rdi + (8 * 2)]\n"
+        ^"\tmov rdi, rsp \n"
+        ^"\tmov rax, qword [rdi + 8]\n"
+        ^"\tmov qword [rdi], rax\n"
+        ^"\tlea rdi, [rdi + 8]\n"
+        ^"\tmov rax, qword [rdi + 8]\n"
+        ^"\tmov qword [rdi], rax\n"
+        ^"\tlea rdi, [rdi + 8]\n"
+        ^"\tmov rax, qword [rdi + 8]\n"
+        ^"\tmov rcx, rax\n"
+        ^"\tadd rax, 1\n"
+        ^"\tmov qword [rdi], rax\n"
+        ^"\tlea rdi, [rdi + 8]\n"
+        ^(Printf.sprintf "\t%s:\n" label_loop_No_1)
+        ^"\tcmp rcx, 0\n"
+        ^(Printf.sprintf "\tje %s\n" label_loop_No_1_end)
+        ^"\tsub rcx, 1\n"
+        ^"\tlea rax, [rax + (8 * 2)]\n"
+        ^"\tmov rax, qword [rdi + 8]\n"
+        ^"\tmov qword [rdi], rax\n"
+        ^"\tlea rdi, [rdi + 8]\n"
+        ^(Printf.sprintf
+        "\tjmp %s\n
+        \t%s:\n"
+        label_loop_No_1 label_loop_No_1_end)
+        ^"\tmov qword [rdi], sob_nil\n"
+        ^(Printf.sprintf
+        "\tjmp %s\n
+        \t%s:\n"
+        label_stack_ok label_arity_more)
+        ^"\tmov rsi, qword [rsp + (8 * 2)]\n"
+        ^(Printf.sprintf "\tlea rcx, [rsi - %d]\n" args_count)
+        ^"\tmov r8, sob_nil\n"
+        ^"\tlea rsi, [rsp + (8 * rsi) + (8 * 2)]\n"
+        ^"\tmov rdx, rsi\n"
+        ^(Printf.sprintf "\t%s:\n" label_loop_No_2)
+        ^"\tcmp rcx, 0\n"
+        ^(Printf.sprintf "\tje %s\n" label_loop_No_2_end)
+        ^"\tmov rdi, 1 + (8 * 2)\n"
+        ^"\tcall malloc\n"
+        ^"\tmov byte [rax], T_pair\n"
+        ^"\tmov rbx, qword [rsi]\n"
+        ^"\tmov SOB_PAIR_CAR(rax), rbx\n"
+        ^"\tmov SOB_PAIR_CDR(rax), r8\n"
+        ^"\tadd rsi, -8\n"
+        ^"\tsub rcx, 1\n"
+        ^"\tmov r8, rax\n"
+        ^(Printf.sprintf
+        "\tjmp %s\n
+        \t%s:\n"
+        label_loop_No_2 label_loop_No_2_end)
+        ^"\tmov qword [rdx], r8\n"
+        ^"\tsub rdx, 8 * 1\n"
+        ^ (Printf.sprintf
+        "\tlea rsi, [rsp + (8 * (%d + 2))]\n
+        \tmov rcx, %d \n
+        \t%s:\n"
+        args_count args_count label_loop_No_3)
+        ^"\tcmp rcx, 0\n"
+        ^(Printf.sprintf "\tje %s\n" label_loop_No_3_end)
+        ^"\tmov rax, qword [rsi]\n"
+        ^"\tmov qword [rdx], rax\n"
+        ^"\tlea rsi, [rsi - 8]\n"
+        ^"\tadd rdx, -8\n"
+        ^"\tadd rcx, -1\n"
+        ^(Printf.sprintf
+        "\tjmp %s\n
+        \t%s:\n
+        \tmov qword [rdx], 1 + %d\n"
+        label_loop_No_3 label_loop_No_3_end args_count)
+        ^"\tadd rsi, -8\n"
+        ^"\tadd rdx, -8\n"
+        ^"\tmov rax, qword [rsi]\n"
+        ^"\tmov qword [rdx], rax\n"
+        ^"\tadd rdx, -8\n"
+        ^"\tlea rsi, [rsi - 8]\n"
+        ^"\tmov rax, qword [rsi]\n"
+        ^"\tmov qword [rdx], rax\n"
+        ^"\tmov rsp, rdx\n"
+        ^(Printf.sprintf "\t%s:\n" label_stack_ok)
+        ^"\tenter 0, 0\n"
+        ^(run (List.length params' + 1) (env + 1) body)
+        ^"\tleave\n"
+        ^(Printf.sprintf "\tret 8 * (2 + %d)\n" (List.length params' + 1))
+        ^(Printf.sprintf "%s:\t; new closure is in rax\n" label_end)
       | ScmApplic' (proc, args, Non_Tail_Call) -> 
-        let args_asm_code = List.map (fun (exp) ->  (run params env exp) ^ "\tpush rax\n") args in 
-        let args_asm_code = List.fold_left (fun acc lst -> lst ^ acc) "" args_asm_code in 
-        let args_num = List.length args in
-        let args_num = Printf.sprintf "\tpush %d\n" args_num  in
-        let proc_asm_code = run params env proc in
-        
-        args_asm_code ^
-        args_num ^
-        proc_asm_code ^
-        "\tcmp byte [rax], T_closure 
-        jne L_code_ptr_error\n
-        mov rbx, SOB_CLOSURE_ENV(rax)\n
-        push rbx\n
-        call SOB_CLOSURE_CODE(rax)\n
-        "
-
-        (* let args_push = 
+        let args_push = 
           String.concat "" (List.map (fun arg ->
             let create_arg = run params env arg in
             create_arg
@@ -931,45 +772,50 @@ let collect_free_vars =
         ^ (run params env proc)
         ^ "\tassert_closure(rax)\n"
         ^"\tpush SOB_CLOSURE_ENV(rax) \n"
-        ^"\tcall SOB_CLOSURE_CODE(rax)\n" *)
+        ^"\tcall SOB_CLOSURE_CODE(rax)\n"
       | ScmApplic' (proc, args, Tail_Call) -> 
-       let arguments = List.fold_right (fun cur acc -> acc^(run params env cur)^"\tpush rax\n") args "" 
-       and num = List.length(args)
-       and label_fix_stuck = make_fix_stack_label()
-       and label_loop_fix_stuck = make_label_loop_fix_stuck()
-       and label_loop_fix_stuck_end = make_label_loop_fix_stuck_end()
-       in
-       (Printf.sprintf"\t %s\n" arguments)
-       ^ (Printf.sprintf"\tpush %d\n"num)
-       ^ (run params env proc)
-       ^ "\tassert_closure(rax)\n"
-       ^"\tpush rax \n"
-       ^"\tpush qword [rbp + 8]\n"
-       ^"\tpush qword [rbp]\n"
-       ^"\tadd rbx ,8*1\n"
-       ^(Printf.sprintf"\t %s:\n" label_fix_stuck)
-       ^"\tmov rdx, qword[rbp+8*3]\n"
-       ^"\tadd rdx, 3\n"
-       ^"\tshl rdx, 3\n"
-       ^"\tmov rdi, rbp\n"
-       ^"\tadd rdi, rdx\n"
-       ^"\tmov r8, qword[rbp]\n"                        
-       ^"\tmov rcx, rbp\n"
-       ^"\tsub rcx, 8\n"
-       ^(Printf.sprintf"\t %s:\n" label_loop_fix_stuck)
-       ^"\tcmp rsp, rcx\n"
-       ^(Printf.sprintf"ja %s\n " label_loop_fix_stuck_end)             
-       ^"\tmov rbx, qword[rcx]\n"
-       ^"\t mov qword[rdi], rbx\n"
-       ^"\tsub rdi, 8\n"
-       ^"\tsub rcx, 8\n"
-       ^(Printf.sprintf"jmp %s\n"label_loop_fix_stuck)
-       ^(Printf.sprintf"\t %s:\n" label_loop_fix_stuck_end)
-       ^"\tadd rdi, 8\n"
-       ^"\t mov rsp, rdi\n"
-       ^"\tmov rbp, r8\n"
-       ^ "\tpop rbp\n"
-       ^"\tjmp rax \n"
+        let applic_args = List.map (fun (exp) ->  (run params env exp) ^ "\tpush rax\n") args in 
+        let applic_args = List.fold_left (fun acc lst -> lst ^ acc) "" applic_args in 
+        let num_of_args = List.length args in
+        let num_of_args = Printf.sprintf "\tpush %d\n" num_of_args  in
+        let procedure = run params env proc in 
+        let recycle_frame_loop_label = make_tc_applic_recycle_frame_loop() in 
+        let app_TC_label = make_label_applic_TC() in
+        let recycle_frame_done_label = make_tc_applic_recycle_frame_done() in
+        applic_args   (*push args*)
+        ^num_of_args   (*push num_of_args*)
+        ^procedure
+        ^(Printf.sprintf "%s:\n" app_TC_label)
+        ^"\tcmp byte [rax], T_closure\n"
+        ^"\tjne L_code_ptr_error\n"
+        ^"\tmov rbx, SOB_CLOSURE_ENV(rax)\n"
+        ^"\tpush rbx\n"
+        ^"\tpush qword [rbp + 8]\n"
+        ^"\tpush qword [rbp]\n"
+        ^"\tmov rcx, [rbp + 3 * 8]\n"
+        ^"\tmov rdx, [rsp + 3 * 8]\n"
+        ^"\tlea rsi, [rdx + 4]\n"
+        ^"\tlea r9, [rsi - 1]\n"
+        ^"\tlea rdi, [rcx + 3]\n"
+        ^"\txor r8, r8\n"
+        ^(Printf.sprintf "%s:\n" recycle_frame_loop_label)
+        ^"\tmov r8, [rsp + (r9 * 8)]\n"
+        ^"\tmov [rbp + (rdi * 8)], r8\n"
+        ^"\tdec r9\n"
+        ^"\txor r8, r8\n"
+        ^"\tdec rdi\n"
+        ^"\tdec rsi\n"
+        ^"\tcmp rsi, 0\n"
+        ^(Printf.sprintf "\tjne %s\n" recycle_frame_loop_label)
+        ^(Printf.sprintf "%s:\n" recycle_frame_done_label)
+        ^";this pop rbp in sot to the right place\n"
+        ^"\tmov r9, rcx\n"
+        ^"\tlea r9, [8 * (r9 + 4)]\n"
+        ^"\tadd rsp, r9\n"
+        ^"\tpop rbp\n"
+        ^"\tmov rcx, qword [rbp]\n"
+        ^"\tmov rbx, SOB_CLOSURE_CODE(rax)\n"
+        ^"\tjmp rbx\n"
     and runs params env exprs' =
       List.map
         (fun expr' ->
@@ -1008,12 +854,5 @@ let collect_free_vars =
     compile_scheme_string file_out (file_to_string file_in);;
 
 end;; (* end of Code_Generation struct *)
-(* TODO: delete here: *)
-open Code_Generation;;
-
-(* let show str = Semantic_Analysis.semantics
-(Tag_Parser.tag_parse (Reader.nt_sexpr str 0).found);; *)
-
-(* end of delete *)
 
 (* end-of-input *)

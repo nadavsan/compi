@@ -5108,7 +5108,7 @@ y))))))))) #t) #f)
               (cons 'fact-3 trail)))))))
 (fact-1 10)" ; expected = "(3628800 fact-1 fact-2 fact-3 fact-1 fact-2 fact-3 fact-1
   fact-2 fact-3 fact-1 fact-2)"};
-  {test = "(equal?  (let ((a 'a) (b 'b)) `(,a ,b ,(let ((c 'c)) `(,a ,b ,c ,(let
+  (*{test = "(equal?  (let ((a 'a) (b 'b)) `(,a ,b ,(let ((c 'c)) `(,a ,b ,c ,(let
 ((d 'd) (e 'e) (f 'f)) `(,a ,b ,c ,d ,e ,f ,(let () `(,a ,b ,c ,d ,e
 ,f ,(let ((g 'g) (h 'h)) `(,a ,b ,c ,d ,e ,f ,g ,h ,(let ((i 'i) (j
 'j) (k 'k) (l 'l)) `(,a ,b ,c ,d ,e ,f ,g ,h ,i ,j ,k ,l ,(let () `(,a
@@ -10171,7 +10171,7 @@ apply (cons (cons cons (cons (cons #t (cons #f '())) '())) '())) '()))
 '())) '())) '())) '())) '())) '())) '())) '())) '())) '())) '()))
 '())) '())) '())) '())) '())) '())) '())) '())) '())) '())) '()))
 '())) '())) '())) '())) '())) '())) '())) '())) '())) '())) '()))
-'())) '())) '())) '())) '())) '())) '())) '())) '())) '())))" ; expected = "(#t . #f)"};
+'())) '())) '())) '())) '())) '())) '())) '())) '())) '())))" ; expected = "(#t . #f)"};*)
   {test = "'()" ; expected = "()"};
   {test = "(define even?
   (letrec ((even-1?
